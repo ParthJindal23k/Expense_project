@@ -1,31 +1,19 @@
 import React from 'react'
-import {BrowserRouter as Router, Route, Routes} from 'react-router-dom'
+import { BrowserRouter,Routes,Route } from 'react-router-dom'
 import Register from './pages/Register'
 import Login from './pages/Login'
-import Home from './pages/Home'
-import Dashboard from './pages/Dashboard'
-import PrivateRoute from './components/PrivateRoute'
-
+import VerifyOtp from './pages/VerifyOtp'
 
 const App = () => {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path = '/dashboard' element = {
-          <PrivateRoute>
-            <Dashboard/>
-          </PrivateRoute>
-        } />
+        <Route path='/verify-otp'element = {<VerifyOtp/>}   />
       </Routes>
-    </Router>
+    </BrowserRouter>
   )
 }
 
 export default App
-
-
-
-

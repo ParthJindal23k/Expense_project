@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     "corsheaders",
     'rest_framework_simplejwt',
+    "anymail",
 
 
 ]
@@ -95,8 +96,13 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'expensetracker',
+        'USER': 'newuser',
+        'PASSWORD':'newpassword123',
+        'HOST': 'localhost',                          # Usually 'localhost' if MySQL is local
+        'PORT': '3306',  
+
     }
 }
 
@@ -142,6 +148,19 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+
+
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
+
+
+EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
+
+ANYMAIL = {
+    "SENDINBLUE_API_KEY": "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",  # not SMTP password
+}
+
+DEFAULT_FROM_EMAIL = "parthjindal23316@gmail.com"  # your verified sender

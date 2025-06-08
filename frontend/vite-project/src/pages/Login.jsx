@@ -1,55 +1,71 @@
-import React, { useState } from 'react';
+import React , {useState} from 'react'
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const navigate = useNavigate();
+const Login = () => {
 
-  const handleSubmit = async (e) => {
+  const [email ,setemail] = useState('');
+  const [password ,setpassword] = useState('');
+  const navigate = useNavigate()
+
+  const handleSubmit = async(e) =>{
     e.preventDefault();
 
-    try {
-      const res = await axios.post('http://localhost:8000/api/token/', {
-        username,
-        password,
-      });
-      localStorage.setItem('access_token', res.data.access);
-      localStorage.setItem('refresh_token', res.data.refresh);    
-      navigate('/dashboard'); // Redirect to home after login
-    } catch (error) {
-      alert('Login failed. Check credentials.');
+    const data = {
+      email,
+      password
     }
-  };
 
+
+    try {
+      const res = await axios.post('http://localhost:8000/auth/login/',data)
+
+      if(res.status == 200){
+        const department = res.data.department
+        alert(`Login successfully , You are redirected to ${department} dashboard`)
+
+        navigate('/Emp-dashboard')
+      }
+
+    } catch (error) {
+       console.error('Login error:', error);
+      alert(error.response?.data?.message || 'Login failed!');
+    }
+
+
+  }
+
+  
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-        <br />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <br />
-        <button type="submit">Login</button>
+     <div className='min-h-screen flex items-center justify-center bg-black'>
+      <div className="w-full border rounded-2xl sm:max-w-md md:max-w-lg lg:max-w-md xl:max-w-md p-6 sm:p-8 bg-[#1a1a1a] shadow-xl  ">
+        <h2 className='text-3xl  font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-pink-500 to-purple-500'>Login your Account</h2>
+        <p className='text-gray-400 text-center mt-2 text-sm py-5'>Login to continue</p>
+
+      <form className='  space-y-5'>
+        <div className="">
+          <label htmlFor='email' className='text-gray-300 block mb-1 text-sm cursor-pointer' >Email</label>
+            <input onChange={(e) =>setemail(e.target.value) } id = 'email' type="email" placeholder='Enter your email' className='w-full p-3 bg-gray-800 rounded-md border-gray-700 text-white text-sm'/>
+        </div>
+    
+        <div className="">
+          <label htmlFor='password' className='text-gray-300 block mb-1 text-sm cursor-pointer' >Password</label>
+            <input onChange={(e) =>setpassword(e.target.value) } id = 'password' type="password" placeholder='Enter your password' className='w-full p-3 bg-gray-800 rounded-md border-gray-700 text-white text-sm'/>
+        </div>
+
+      <div className="flex justify-end">
+        <span className='text-gray-400 text-sm'>Don't have an account?</span>   
+        <a href="/register" className= ' text-sm text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-pink-500 to-purple-500'>Register</a>
+      </div>
+
+        <button onClick={handleSubmit} className='mt-4  w-full py-3 bg-gradient-to-r from-purple-600 to-pink-500  rounded-md text-white font-semibold hover:opacity-90 transition text-sm sm:text-base cursor-pointer'>Login </button>
+
       </form>
-      <p>
-        Don't have an account? <Link to="/register">Register here</Link>
-      </p>
+
+
+      </div>
     </div>
-  );
+  )
 }
 
-export default Login;
+export default Login
