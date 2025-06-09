@@ -1,11 +1,15 @@
-import React from 'react'
+import Sidebar from '../components/employee/EmpSidebar'
+import Dashboard from '../components/employee/EmpDashboard'
 
-const EmpDashboard = () => {
+const App = () => {
   return (
-    <div>
-      Hi this is an Employee dashboard
+    <div className="flex">
+      <Sidebar />
+      <main className="flex-1 ">
+        <Dashboard />
+      </main>
     </div>
   )
 }
 
-export default EmpDashboard
+export default App

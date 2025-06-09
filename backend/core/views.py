@@ -85,4 +85,19 @@ def login_emp(request):
 
         
 
+
+@api_view(['POST'])
+def manager_dashboard(request):
+    email = request.data.get('email')
+
+    try:
+        emp = Employee.objects.get(email = email)
+
+    except:
+        return Response({'error':"User not found"}, status=404)
+    
+    username = emp.username
+    return Response({'username':username})
+
+
         

@@ -3,6 +3,7 @@ import ManagerProfile from '../components/manager/Profile/ManagerProfile'
 import OtherRequest from '../components/manager/OtherRequest/OtherRequest'
 import CreateExpenseRequest from '../components/manager/CreateRequest/CreateExpenseRequest';
 import Sidebar from '../components/manager/Sidebar';
+import Expense from '../components/manager/MyExpense/Expense';
 
 const ManagerDashboard = () => {
 
@@ -12,9 +13,7 @@ const ManagerDashboard = () => {
         switch (section) {
             case 'My Expenses':
                 return (
-                    <div className="">
-                        Your data will be shown here
-                    </div>
+                    <Expense/>
                 )
                 break;
 
@@ -42,11 +41,11 @@ const ManagerDashboard = () => {
 
 
   return (
-    <div>
-        <div className="">
+    <div className='flex'>
+        <div className="flex min-h-screen ">
             <Sidebar currentSection = {section} onChangeSection = {setsection} />
         </div>
-        <div className="">
+        <div className="flex-1 p-6 bg-gray-100">
             {renderSection()}
         </div>
     </div>
