@@ -97,7 +97,14 @@ def manager_dashboard(request):
         return Response({'error':"User not found"}, status=404)
     
     username = emp.username
-    return Response({'username':username})
+    role = emp.role
+    department = emp.department.name_department
+    phone_number = emp.phone_number
+    grade = emp.grade
+
+
+
+    return Response({'username':username,'email':email,'role':role , 'department':department, 'phone_number':phone_number, 'grade':grade})
 
 
         
