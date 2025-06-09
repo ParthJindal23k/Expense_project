@@ -21,10 +21,22 @@ const Login = () => {
       const res = await axios.post('http://localhost:8000/auth/login/',data)
 
       if(res.status == 200){
-        const department = res.data.department
-        alert(`Login successfully , You are redirected to ${department} dashboard`)
+        const role = res.data.role
+        alert(`Login successfully , You are redirected to ${role} dashboard`)
 
-        navigate('/Emp-dashboard')
+        if(role == 'HoD'){
+          navigate('/HoD-Dashboard')
+
+        }
+        else if(role == "Manager"){
+          navigate('/Manager-Dashboard')
+        }
+        else if(role == 'Compensator'){
+          navigate('/Compensator-Dashboard')
+        }else{
+          navigate('/Emp-Dashboard')
+        }
+
       }
 
     } catch (error) {

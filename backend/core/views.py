@@ -78,10 +78,10 @@ def login_emp(request):
     if not check_password(password , emp.password):
         return Response({"error":"Incorrect Password"}, status=401)
     
-    if not emp.department:
-        return Response({'message': 'Department not assigned. Contact admin.'}, status=400)
+    if not emp.role:
+        return Response({'message': 'Role not assigned. Contact admin.'}, status=400)
 
-    return Response({'message': 'Login successful', 'username': emp.username , 'email':emp.email , 'department':emp.department.name_department }, status=200)
+    return Response({'message': 'Login successful', 'username': emp.username , 'email':emp.email , 'role':emp.role }, status=200)
 
         
 
