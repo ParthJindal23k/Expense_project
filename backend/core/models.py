@@ -33,5 +33,41 @@ class Department(models.Model):
 
     def __str__(self):
         return self.name_department
+    
+
+class Expense(models.Model):
+    expense_id = models.AutoField(primary_key=True)
+    emp = models.ForeignKey(Employee , on_delete=models.CASCADE , related_name='expenses')
+    date = models.DateField()
+    note = models.CharField(max_length=500)
+    amount = models.IntegerField()
+    proof= models.FileField(upload_to='expense_proofs/')
+
+    def __str__(self):
+        return  f"Expense {self.expense_id} by {self.emp.username}"
 
 
+class ExpenseRequest(models.Model):
+    LEVEL_CHOICES = [
+        ('L1', 'L1'),
+        ('HoD', 'HoD'),
+        
+    ]
+
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected')
+    ]
+
+    request_id = models.AutoField(primary_key=True)
+    expense = models.ForeignKey(Expense, on_delete=models.CASCADE, related_name='requests')
+    required_by = models.ForeignKey(Employee, on_delete=models.SET_NULL, null=True, related_name='approval_requests')
+    level = models.CharField(max_length=10, choices=LEVEL_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    remarks = models.CharField(max_length=255, null=True, blank=True)
+    time = models.DateTimeField(auto_now=True)
+
+
+    def __str__(self):
+        return f"{self.level} approval for Expense {self.expense.expense_id}"

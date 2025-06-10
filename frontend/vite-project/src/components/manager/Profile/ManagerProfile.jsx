@@ -3,6 +3,47 @@ import React, { useEffect ,useState} from 'react'
 
 const ManagerProfile = () => {
 
+    const [newpassword,setnewpassword] = useState('')
+    const [confirmpassword , setconfirmpassword] = useState('')
+
+
+    const handlePasswordReset = async(e) =>{
+      e.preventDefault()
+
+      if (newpassword !== confirmpassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      try {
+        const email = localStorage.getItem('email')
+        const res = await axios.post('http://localhost:8000/api/reset-password/',{
+          email: email,
+          password : newpassword
+        })
+        
+        if(res.status = 200){
+          alert('Password reset successful !')
+          setnewpassword('')
+          setconfirmpassword('')
+        }
+        else{
+          alert('something went wrong')
+          
+        }
+
+      } catch (error) {
+
+        console.error("Password reset failed", error);
+        alert("Something went wrong!");
+
+      }
+
+
+
+    }
+
+
    const [data , setData] = useState(null);
 
     useEffect(() =>{
@@ -35,7 +76,7 @@ const ManagerProfile = () => {
       <h1 className="text-2xl font-semibold mb-4">Your info</h1>
       <hr className='mb-10'/>
 
-      <form className='space-y-4' >
+      <div className='space-y-4' >
         <div className="">
           <label htmlFor=""  className='block text-lg mb-3 font-bold'>Name</label>
           <p className='w-150  p-2 rounded-lg bg-gray-200' >{data ? data.username : 'Name Loading..'}</p>
@@ -48,15 +89,29 @@ const ManagerProfile = () => {
           <label htmlFor="" className='block text-lg mb-3 font-bold'>Phone number</label>
           <p className='w-150  p-2 rounded-lg bg-gray-200'>{data ? data.phone_number : 'Phone number Loading..'}</p>
         </div>
+      </div>
 
-        <button className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded'>
-          Save
-        </button>
-        <button className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded'>Cancel</button>
+      <form action="" className='space-y-4'>
+        <hr className='my-6'/>
+        <h2 className='text-xl font-semibold mb-2' >Reset Password</h2>
+        <div className="">
+          <label htmlFor="inp1" className='block text-lg mb-2 font-bold'>New Password</label>
+          <input value={newpassword} onChange={(e) => setnewpassword(e.target.value)} type="password"  id="inp1" className='w-full p-2 rounded-lg border border-gray-300' />
+        </div>
+
+        <div className="">
+          <label htmlFor="inp2" className='block text-lg mb-2 font-bold'>Confirm Password</label>
+          <input value={confirmpassword} onChange={(e) => setconfirmpassword(e.target.value)} type="text"  id="inp2" className='w-full p-2 rounded-lg border border-gray-300'/>
+        </div>
+
+        <button onClick={handlePasswordReset} className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-4'>Reset Password</button>
 
 
       </form>
-      
+
+
+
+
     </div>
 
     </div>

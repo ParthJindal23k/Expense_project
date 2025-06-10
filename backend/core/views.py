@@ -81,7 +81,7 @@ def login_emp(request):
     if not emp.role:
         return Response({'message': 'Role not assigned. Contact admin.'}, status=400)
 
-    return Response({'message': 'Login successful', 'username': emp.username , 'email':emp.email , 'role':emp.role }, status=200)
+    return Response({'message': 'Login successful', 'username': emp.username , 'email':emp.email , 'role':emp.role , 'phone_number':emp.phone_number}, status=200)
 
         
 
@@ -102,9 +102,20 @@ def manager_dashboard(request):
     phone_number = emp.phone_number
     grade = emp.grade
 
-
-
     return Response({'username':username,'email':email,'role':role , 'department':department, 'phone_number':phone_number, 'grade':grade})
 
 
-        
+@api_view(['POST'])
+def reset_password(request):
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    try:
+        emp = Employee.objects.get(email = email)
+        emp.password = make_password(password)
+        emp.save()
+
+        return Response({'message': 'Password reset successful'}, status=200)
+    except:
+
+        return Response({'error': 'User not found'}, status=404)        

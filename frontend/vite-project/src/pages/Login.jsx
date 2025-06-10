@@ -23,6 +23,8 @@ const Login = () => {
       if(res.status == 200){
         const role = res.data.role
         alert(`Login successfully , You are redirected to ${role} dashboard`)
+        localStorage.setItem('tempPhone', res.data.phone_number);
+        localStorage.setItem('email', email)
 
         if(role == 'HoD'){
           navigate('/HoD-Dashboard')
