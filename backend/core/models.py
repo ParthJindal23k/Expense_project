@@ -10,6 +10,7 @@ class Employee(models.Model):
     GRADE_CHOICES = [('A1','Grade A1'),('A2', 'Grade A2'), ('B1', 'Grade B1'), ('B2', 'Grade B2'), ('B3', 'Grade B3')]
     grade = models.CharField(max_length=2,choices=GRADE_CHOICES, blank=True, null=True)
 
+
     ROLE_CHOICES = [
         ('Hod', 'Hod'),
         ('Manager', 'Manager'),

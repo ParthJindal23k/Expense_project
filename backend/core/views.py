@@ -1,10 +1,11 @@
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password, check_password
+from rest_framework.response import Response
 
 from .models import Employee
-from .serializers import RegisterSerializer
+from .serializers import RegisterSerializer,ExpenseSerializer
 import random
 from django.conf import settings
 
@@ -101,6 +102,7 @@ def manager_dashboard(request):
     department = emp.department.name_department
     phone_number = emp.phone_number
     grade = emp.grade
+    
 
     return Response({'username':username,'email':email,'role':role , 'department':department, 'phone_number':phone_number, 'grade':grade})
 
@@ -119,3 +121,27 @@ def reset_password(request):
     except:
 
         return Response({'error': 'User not found'}, status=404)        
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])  
+def expense_request(request):
+    email = request.data.get('email')
+
+    try:
+        employee = Employee.objects.get(email=email)
+    except :
+        return Response({'error': "Employee not found"}, status=404)
+
+    data = request.data.copy()
+    data.pop('email', None)
+
+    serializer = ExpenseSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save(emp=employee)
+        return Response({
+            "message": "Expense created successfully"
+        }, status=201)
+    else:
+        print(serializer.errors)  
+        return Response(serializer.errors, status=400)
