@@ -26,7 +26,7 @@ const Login = () => {
         localStorage.setItem('tempPhone', res.data.phone_number);
         localStorage.setItem('email', email)
 
-        if(role == 'HoD'){
+        if(role == 'Hod'){
           navigate('/HoD-Dashboard')
 
         }

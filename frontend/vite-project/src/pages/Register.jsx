@@ -33,6 +33,7 @@ const Register = () => {
 
       if (response.status >= 200 && response.status < 300) {
         alert('OTP sent successfully!');
+        localStorage.setItem('email',email)
         
         navigate('/verify-otp');
       } else {
