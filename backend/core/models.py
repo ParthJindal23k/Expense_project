@@ -17,7 +17,9 @@ class Employee(models.Model):
         ('Employee', 'Employee'),
         ('Compensator', 'Compensator'),
     ]   
+    
     role = models.CharField(max_length=20 , choices=ROLE_CHOICES, blank=True, null=True)
+
 
     department = models.ForeignKey('Department', on_delete=models.SET_NULL , null=True,related_name='employees')
 
@@ -37,6 +39,7 @@ class Department(models.Model):
     
 
 class Expense(models.Model):
+    
     expense_id = models.AutoField(primary_key=True)
     emp = models.ForeignKey(Employee , on_delete=models.CASCADE , related_name='expenses')
     date = models.DateField()
@@ -45,7 +48,7 @@ class Expense(models.Model):
     proof= models.FileField(upload_to='expense_proofs/')
 
     def __str__(self):
-        return  f"Expense {self.expense_id} by {self.emp.username}"
+        return  f"Expense {self.expense_id} by {self.emp.email}"
 
 
 class ExpenseRequest(models.Model):

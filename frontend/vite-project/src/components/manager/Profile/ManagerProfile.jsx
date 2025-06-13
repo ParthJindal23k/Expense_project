@@ -67,7 +67,9 @@ const ManagerProfile = () => {
       <div className="w-1/4 bg-white shadow-lg p-6 flex flex-col items-center">
         <div className="w-36 h-36 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-xl mb-4">Photo</div>  
         <h2 className='text-xl font-bold mb-4'>{data ? data.username : 'Name Loading..'}</h2>
-        <p className='text-blue-500 font-bold mb-4'>{data ? data.role : 'Role Loading..'}</p>
+        <p className='text-blue-500 font-bold mb-4'>{data ? `Employee Id ${data.id} `: 'ID Loading..'}</p>
+
+        <p className='text-blue-500 font-bold mb-4'>{data ?  data.role : 'Role Loading..'}</p>
         <p className='text-blue-500 font-bold mb-4'>{data ? data.department : 'Department Loading..'}</p>
         <div className="text-blue-500 font-bold mb-4">{data ? `${data.grade} Grade` : 'Grade Loading...'}</div>
       </div>

@@ -2,6 +2,7 @@ import React , {useState} from 'react'
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+
 const Login = () => {
 
   const [email ,setemail] = useState('');
@@ -22,7 +23,6 @@ const Login = () => {
 
       if(res.status == 200){
         const role = res.data.role
-        alert(`Login successfully , You are redirected to ${role} dashboard`)
         localStorage.setItem('tempPhone', res.data.phone_number);
         localStorage.setItem('email', email)
 
@@ -66,6 +66,7 @@ const Login = () => {
           <label htmlFor='password' className='text-gray-300 block mb-1 text-sm cursor-pointer' >Password</label>
             <input onChange={(e) =>setpassword(e.target.value) } id = 'password' type="password" placeholder='Enter your password' className='w-full p-3 bg-gray-800 rounded-md border-gray-700 text-white text-sm'/>
         </div>
+
 
       <div className="flex justify-end">
         <span className='text-gray-400 text-sm'>Don't have an account?</span>   

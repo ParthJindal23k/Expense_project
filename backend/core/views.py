@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.response import Response
 
-from .models import Employee
+from .models import Employee,Expense,ExpenseRequest
 from .serializers import RegisterSerializer,ExpenseSerializer
 import random
 from django.conf import settings
@@ -13,7 +13,7 @@ from django.conf import settings
 
 @api_view(['POST'])
 def register_user(request):
-    print("Request data:", request.data)  # to check what you are receiving
+    print("Request data:", request.data)  
 
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
@@ -102,9 +102,10 @@ def manager_dashboard(request):
     department = emp.department.name_department
     phone_number = emp.phone_number
     grade = emp.grade
+    id = emp.id
     
 
-    return Response({'username':username,'email':email,'role':role , 'department':department, 'phone_number':phone_number, 'grade':grade})
+    return Response({'username':username,'email':email,'role':role , 'department':department, 'phone_number':phone_number, 'grade':grade , 'id' : id})
 
 
 @api_view(['POST'])
@@ -138,10 +139,54 @@ def expense_request(request):
 
     serializer = ExpenseSerializer(data=data)
     if serializer.is_valid():
-        serializer.save(emp=employee)
+        expense = serializer.save(emp=employee)
+
+        if employee.role == 'Employee':
+            required_by = Employee.objects.filter(role = 'Manager', department = employee.department)
+            level = 'L1'
+        else:
+            required_by = employee.department.HOD
+            level = 'HoD'
+        
+
+        ExpenseRequest.objects.create(
+            expense = expense,
+            required_by=required_by,
+            level=level,
+            status = "Pending",
+
+        )
+
         return Response({
-            "message": "Expense created successfully"
+            "message": "Expense and request created successfully"
         }, status=201)
     else:
         print(serializer.errors)  
         return Response(serializer.errors, status=400)
+    
+
+
+@api_view(['POST'])
+def expense_history(request):
+    email = request.data.get('email')
+    try:
+        emp = Employee.objects.get(email = email)
+
+    except:
+        return Response({'error':"User not found"}, status=404)
+    
+    expense_requested = ExpenseRequest.objects.filter(expense__emp = emp).order_by('-time')
+
+    history_data = []
+    for req in expense_requested:
+        history_data.append({
+            "expense_date" : req.expense.date,
+            'request_date': req.time,
+            'note': req.expense.note,
+            'amount': req.expense.amount,
+            'status': req.status
+        })
+
+    return Response(history_data)
+
+
