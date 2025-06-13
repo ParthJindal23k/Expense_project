@@ -3,7 +3,7 @@ import React from 'react'
 const HodDashboard = () => {
   return (
     <div>
-      Hi this is an HOD dashboard
+      Yu page hum na bna rhe, tu bnale!!!
     </div>
   )
 }

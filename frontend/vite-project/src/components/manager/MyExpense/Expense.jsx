@@ -67,7 +67,7 @@ const Expense = () => {
       <table className="w-full">
         <thead>
           <tr className="bg-gradient-to-r from-pink-300 to-pink-800 text-transparent bg-clip-text">
-            <th className='pb-2'>Date</th>
+            <th className='pb-2'>Expense Date</th>
             <th className="pb-2">Expense Request Date</th>
             <th className="pb-2">Category</th>
             <th className="pb-2">Amount</th>
@@ -77,9 +77,9 @@ const Expense = () => {
         </thead>
         <tbody>
           {history.map((data , id) => (
-            <tr>
-                <td>Date</td>
-                <td>{data.date}</td>
+            <tr key = {id}>
+                <td>{data.expense_date}</td>
+                <td>{data.request_date}</td>
                 <td>{data.note}</td>
                 <td>{data.amount}</td>
                 <td>{data.status}</td>
