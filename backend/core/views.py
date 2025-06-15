@@ -142,7 +142,7 @@ def expense_request(request):
         expense = serializer.save(emp=employee)
 
         if employee.role == 'Employee':
-            required_by = Employee.objects.filter(role = 'Manager', department = employee.department)
+            required_by = Employee.objects.get(role = 'Manager', department = employee.department)
             level = 'L1'
         else:
             required_by = employee.department.HOD
@@ -188,5 +188,65 @@ def expense_history(request):
         })
 
     return Response(history_data)
+
+
+@api_view(['POST'])
+def get_other_request(request):
+    email = request.data.get("email")
+
+    try:
+        emp= Employee.objects.get(email = email)
+        department = emp.department
+        emp_req = ExpenseRequest.objects.filter(
+            expense__emp__department = department,
+            level = 'L1'
+        ).select_related('expense','required_by')
+
+        result = []
+        for req in emp_req:
+            result.append({
+                'request_id': req.request_id,
+                'raised_by' : req.expense.emp.id,
+                'expense_date' : str(req.expense.date),
+                'request_date' : str(req.time),
+                'note': req.expense.note,
+                "amount" : req.expense.amount,
+                "status": req.status,
+                'remarks' : req.remarks or ''
+            })
+
+        return Response(result)
+    except:
+        return Response({'error': 'Manager not found'}, status=400)
+
+
+@api_view(['POST'])
+def update_request_status(request):
+    request_id = request.data.get('request_id')
+    action = request.data.get('action')  
+    remarks = request.data.get('remarks', '')
+    try:
+        req = ExpenseRequest.objects.get(request_id=request_id)
+        if action == 'approve':
+            req.status = 'Approved'
+        elif action == 'reject':
+            req.status = 'Rejected'
+            ExpenseRequest.objects.create(
+                expense=req.expense,
+                required_by=req.required_by,
+                level='HoD',
+                status='Pending'
+            )
+        else:
+            return Response({'error': 'Invalid action'}, status=400)
+        req.remarks = remarks
+        req.save()
+        return Response({'success': True})
+
+
+    except:
+        return Response({'error': 'Request not found'}, status=404)
+
+
 
 
