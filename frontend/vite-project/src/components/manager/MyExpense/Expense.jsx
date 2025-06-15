@@ -67,22 +67,25 @@ const Expense = () => {
       <table className="w-full">
         <thead>
           <tr className="bg-gradient-to-r from-pink-300 to-pink-800 text-transparent bg-clip-text">
-            <th className='pb-2'>Expense Date</th>
-            <th className="pb-2">Expense Request Date</th>
-            <th className="pb-2">Category</th>
-            <th className="pb-2">Amount</th>
-            <th className="pb-2">Status</th>
+            <th className='pb-2  '>Expense Date</th>
+            <th className="pb-2  ">Expense Request Date</th>
+            <th className="pb-2  ">Category</th>
+            <th className="pb-2  ">Amount</th>
+            <th className="pb-2 ">Status</th>
           </tr>
           
         </thead>
-        <tbody>
+        <tbody className='text-center'>
           {history.map((data , id) => (
-            <tr key = {id}>
-                <td>{data.expense_date}</td>
-                <td>{data.request_date}</td>
-                <td>{data.note}</td>
-                <td>{data.amount}</td>
-                <td>{data.status}</td>
+            <tr  key = {id}>
+                <td className=" py-2">{data.expense_date}</td>
+                <td className=" py-2">{data.request_date.slice(0,16).replace('T',' ,')}</td>
+                <td className=" py-2">{data.note}</td>
+                <td className=" py-2">{data.amount}</td>
+                <td  className={`font-semibold px-2 py-1 rounded 
+                    ${data.status === 'Approved' ? 'text-green-600 bg-green-100' : 
+                     data.status === 'Pending' ? 'text-yellow-600 bg-yellow-100' : 
+                    'text-red-600 bg-red-100'}`}>{data.status}</td>
             </tr>
           )   )}
         </tbody>
