@@ -61,7 +61,8 @@ class ExpenseRequest(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Approved', 'Approved'),
-        ('Rejected', 'Rejected')
+        ('Rejected', 'Rejected'),
+        ('Paid', 'Paid')
     ]
 
     request_id = models.AutoField(primary_key=True)
