@@ -222,6 +222,7 @@ def get_other_request(request):
 
 @api_view(['POST'])
 def update_request_status(request):
+    
     request_id = request.data.get('request_id')
     action = request.data.get('action')  
     remarks = request.data.get('remarks', '')
