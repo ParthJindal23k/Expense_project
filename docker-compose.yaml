@@ -16,9 +16,9 @@ services:
   backend:
     #build: ./backend
     build:
-      context: .
-      dockerfile: ./backend/Dockerfile
-    image: expense_tracker_backend
+      context: ./backend
+      dockerfile: Dockerfile
+    image: expense_tracker_backend_image
     container_name: expense_tracker_backend
     volumes:
       - ./backend:/app
@@ -32,14 +32,14 @@ services:
   frontend:
     build:
       context: ./frontend/vite-project
-      dockerfile: ./frontend/vite-project/Dockerfile
-    image: expense_tracker_backend  
+      dockerfile: Dockerfile
+    image: expense_tracker_frontend_image  
     container_name: expense_tracker_frontend
     ports:
       - "5173:5173"
     volumes:
       - ./frontend/vite-project:/app
-    command: npm i &&  npm audit fix && npm run dev
+    command: sh -c "npm install && npm audit fix || true && npm run dev"
     depends_on:
       - backend
 
