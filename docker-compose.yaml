@@ -15,7 +15,11 @@ services:
 
   backend:
     #build: ./backend
-    dockerfile: .
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    image: expense_tracker_backend
+    container_name: expense_tracker_backend
     volumes:
       - ./backend:/app
     ports:
@@ -28,6 +32,9 @@ services:
   frontend:
     build:
       context: ./frontend/vite-project
+      dockerfile: ./frontend/vite-project/Dockerfile
+    image: expense_tracker_backend  
+    container_name: expense_tracker_frontend
     ports:
       - "5173:5173"
     volumes:
