@@ -34,7 +34,7 @@ const OtherRequest = () => {
     const remark = remarks[req_id] || '';
     try{
       await axios.post('http://localhost:8000/api/update_request/',{
-        req_id : req_id,
+        request_id : req_id,
         action:action,
         remarks : remark
       })

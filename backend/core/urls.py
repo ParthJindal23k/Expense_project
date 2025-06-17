@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_user,verify_otp,login_emp,manager_dashboard,reset_password,expense_request, expense_history,get_other_request, hod_dashboard
+from .views import register_user,verify_otp,login_emp,manager_dashboard,reset_password,expense_request, expense_history,get_other_request, hod_dashboard, update_request, get_Hod_Other_request
 
 urlpatterns = [
     
@@ -11,6 +11,10 @@ urlpatterns = [
     path('expenses/' , expense_request),
     path('expense-history/', expense_history),
     path('manager-other-request/' ,get_other_request),
-    path('hod/dashboard',hod_dashboard),
+    path('Hod/dashboard/',hod_dashboard),
+    path('update_request/',update_request ),
+    path('Hod-other-request/' ,get_Hod_Other_request )
+
+
 
 ]

@@ -220,31 +220,42 @@ def get_other_request(request):
         return Response({'error': 'Manager not found'}, status=400)
 
 
+
+
+@api_view(['POST'])
 def update_request(request):
 
     request_id = request.data.get('request_id')
     action = request.data.get('action')  
     remarks = request.data.get('remarks', '')
+    
     try:
         req = ExpenseRequest.objects.get(request_id=request_id)
+
         if action == 'approve':
             req.status = 'Approved'
-        elif action == 'reject':
-            req.status = 'Rejected'
+            req.remarks = remarks
+            req.save()
+
             ExpenseRequest.objects.create(
                 expense=req.expense,
                 required_by=req.required_by,
                 level='HoD',
-                status='Pending'
+                status='Pending',
+
             )
+
+        elif action == 'reject':
+            req.status = 'Rejected'
+            req.remarks = remarks
+            req.save()
+
         else:
             return Response({'error': 'Invalid action'}, status=400)
-        req.remarks = remarks
-        req.save()
+
         return Response({'success': True})
 
-
-    except:
+    except ExpenseRequest.DoesNotExist:
         return Response({'error': 'Request not found'}, status=404)
 
 
@@ -268,3 +279,33 @@ def hod_dashboard(request):
     
 
     return Response({'username':username,'email':email,'role':role , 'department':department, 'phone_number':phone_number, 'grade':grade , 'id' : id})
+
+
+@api_view(['POST'])
+def get_Hod_Other_request(request):
+    email = request.data.get("email")
+
+    try:
+        emp= Employee.objects.get(email = email)
+        department = emp.department
+        emp_req = ExpenseRequest.objects.filter(
+            expense__emp__department = department,
+            level = 'HoD'
+        ).select_related('expense','required_by')
+
+        result = []
+        for req in emp_req:
+            result.append({
+                'request_id': req.request_id,
+                'raised_by' : req.expense.emp.id,
+                'expense_date' : str(req.expense.date),
+                'request_date' : str(req.time),
+                'note': req.expense.note,
+                "amount" : req.expense.amount,
+                "status": req.status,
+                'remarks' : req.remarks or ''
+            })
+
+        return Response(result)
+    except:
+        return Response({'error': 'Manager not found'}, status=400)
