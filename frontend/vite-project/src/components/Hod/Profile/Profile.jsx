@@ -51,7 +51,7 @@ useEffect(() => {
   const fetchData = async () => {
     try {
       const email = localStorage.getItem('email');
-      const res = await axios.post('http://localhost:8000/api/manager/dashboard/', { email });
+      const res = await axios.post('http://localhost:8000/api/Hod/dashboard/', { email });
       setData(res.data);
     } catch (error) {
       console.log("Error in Fetching Data", error);

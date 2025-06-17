@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Sidebar from '../components/Hod/Sidebar';
-import OtherRequest from '../components/Hod/OtherRequest/OtherRequest';
+import OtherRequest from '../components/Hod/OtherRequest/OtherRequest'
 import HodProfile from '../components/Hod/Profile/Profile';
 
 const HodDashboard = () => {

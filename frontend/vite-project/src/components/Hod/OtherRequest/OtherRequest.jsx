@@ -13,7 +13,7 @@ const OtherRequest = () => {
     const fecthExpense = async() =>{
       try {
         const email = localStorage.getItem('email');
-        const res = await axios.post('http://localhost:8000/api/manager-other-request/', {
+        const res = await axios.post('http://localhost:8000/api/Hod-other-request/', {
           email:email
         })
 
@@ -41,7 +41,7 @@ const OtherRequest = () => {
 
       setloading(true);
       const email = localStorage.getItem('email');
-      const res = await axios.post('http://localhost:8000/api/manager-other-request/', { email });
+      const res = await axios.post('http://localhost:8000/api/Hod-other-request/', { email });
       setreq(res.data);   
       setloading(false);
 
