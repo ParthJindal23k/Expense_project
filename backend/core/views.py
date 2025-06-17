@@ -220,13 +220,8 @@ def get_other_request(request):
         return Response({'error': 'Manager not found'}, status=400)
 
 
-@api_view(['POST'])
-<<<<<<< HEAD
-def update_request_status(request):
-    
-=======
 def update_request(request):
->>>>>>> origin/krish
+
     request_id = request.data.get('request_id')
     action = request.data.get('action')  
     remarks = request.data.get('remarks', '')
