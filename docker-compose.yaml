@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mysql:8.0
+    platform: linux/amd64
+    restart: always
+    environment:
+      MYSQL_DATABASE: expense_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+      MYSQL_ROOT_PASSWORD: yourpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    #build: ./backend
+    dockerfile: .
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: >
+      sh -c "sleep 10 && python manage.py runserver 0.0.0.0:8000"
+
+  frontend:
+    build:
+      context: ./frontend/vite-project
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/vite-project:/app
+    command: npm i &&  npm audit fix && npm run dev
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
