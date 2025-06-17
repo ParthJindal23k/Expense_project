@@ -221,8 +221,12 @@ def get_other_request(request):
 
 
 @api_view(['POST'])
+<<<<<<< HEAD
 def update_request_status(request):
     
+=======
+def update_request(request):
+>>>>>>> origin/krish
     request_id = request.data.get('request_id')
     action = request.data.get('action')  
     remarks = request.data.get('remarks', '')
@@ -250,4 +254,22 @@ def update_request_status(request):
 
 
 
+@api_view(['POST'])
+def hod_dashboard(request):
+    email = request.data.get('email')
 
+    try:
+        emp = Employee.objects.get(email = email)
+
+    except:
+        return Response({'error':"User not found"}, status=404)
+    
+    username = emp.username
+    role = emp.role
+    department = emp.department.name_department
+    phone_number = emp.phone_number
+    grade = emp.grade
+    id = emp.id
+    
+
+    return Response({'username':username,'email':email,'role':role , 'department':department, 'phone_number':phone_number, 'grade':grade , 'id' : id})
