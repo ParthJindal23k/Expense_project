@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -98,10 +99,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'expensetracker',
-        'USER': 'newuser',
+        'USER': "newuser",
         'PASSWORD':'newpassword123',
-        'HOST': 'localhost',                          # Usually 'localhost' if MySQL is local
-        'PORT': '3306',  
+        'HOST': "localhost",                          
+        'PORT': '3306'  
 
     }
 }

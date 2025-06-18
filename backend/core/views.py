@@ -309,3 +309,15 @@ def get_Hod_Other_request(request):
         return Response(result)
     except:
         return Response({'error': 'Manager not found'}, status=400)
+    
+
+@api_view(['POST'])
+def summary_request(request):
+    email = request.data.get('email')
+    emp = Employee.objects.get(email = email)
+    id_ = emp.id
+
+    expense_id = Expense.objects.filter(expense_id = id_)
+    
+
+
