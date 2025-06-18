@@ -6,6 +6,8 @@ const Expense = () => {
 
     const [data , setData] = useState(null);
     const [history , sethistory] = useState([])
+    const [data_sum , setData_sum] = useState(null)
+
 
     useEffect(() =>{
         const fetchData = async () =>{
@@ -17,6 +19,13 @@ const Expense = () => {
                 const histres = await axios.post('http://localhost:8000/api/expense-history/', {
                     email:email
                 })
+
+
+                const sum_res = await axios.post('http://localhost:8000/api/summary_data/' ,{
+                  email: email
+                })
+
+                
 
                 sethistory(histres.data)
 
