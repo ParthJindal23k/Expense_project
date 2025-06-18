@@ -17,7 +17,7 @@ const HodProfile = () => {
 
         try {
             const email = localStorage.getItem('email')
-            const res = await axios.post('http://localhost:8000/api/reset-password/', {
+            const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/reset-password/`, {
                 email: email,
                 password: newpassword
             })
@@ -51,7 +51,7 @@ useEffect(() => {
   const fetchData = async () => {
     try {
       const email = localStorage.getItem('email');
-      const res = await axios.post('http://localhost:8000/api/Hod/dashboard/', { email });
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Hod/dashboard/`, { email });
       setData(res.data);
     } catch (error) {
       console.log("Error in Fetching Data", error);

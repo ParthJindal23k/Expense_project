@@ -13,7 +13,7 @@ const OtherRequest = () => {
     const fecthExpense = async() =>{
       try {
         const email = localStorage.getItem('email');
-        const res = await axios.post('http://localhost:8000/api/manager-other-request/', {
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/manager-other-request/`, {
           email:email
         })
 
@@ -33,7 +33,7 @@ const OtherRequest = () => {
   const handleAction = async(req_id, action) =>{
     const remark = remarks[req_id] || '';
     try{
-      await axios.post('http://localhost:8000/api/update_request/',{
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/update_request/`,{
         request_id : req_id,
         action:action,
         remarks : remark
@@ -41,7 +41,7 @@ const OtherRequest = () => {
 
       setloading(true);
       const email = localStorage.getItem('email');
-      const res = await axios.post('http://localhost:8000/api/manager-other-request/', { email });
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/manager-other-request/`, { email });
       setreq(res.data);   
       setloading(false);
 
@@ -83,7 +83,7 @@ const OtherRequest = () => {
                   <tr  key={idx} className="border-b">
                     <td className="py-2 px-3">{data.raised_by}</td>
                     <td className="py-2 px-3">{data.expense_date}</td>
-                    <td className="py-2 px-3">{data.request_date.slice(0, 16).replace('T', ' ')}</td>
+                    <td className="py-2 px-3">{data.request_date}</td>
                     <td className="py-2 px-3">{data.note}</td>
                     <td className="py-2 px-3">{data.amount}</td>
                     <td className="py-2 px-3">{data.status}</td>

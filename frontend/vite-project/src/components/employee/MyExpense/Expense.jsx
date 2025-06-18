@@ -10,7 +10,7 @@ const Expense = () => {
         const fetchData = async () =>{
             try {
                 const email = localStorage.getItem('email')
-                const res = await axios.post('http://localhost:8000/api/manager/dashboard/', {email:email} )
+                const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/manager/dashboard/`, {email:email} )
                 setData(res.data)
             } catch (error) {
                 console.log("Error in Fetching Data", error);

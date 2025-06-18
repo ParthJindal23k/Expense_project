@@ -6,28 +6,45 @@ const Expense = () => {
 
     const [data , setData] = useState(null);
     const [history , sethistory] = useState([])
-    const [data_sum , setData_sum] = useState(null)
+    const [pending, setpending] = useState(0)
+    const [rejected , setrejected] = useState(0);
 
 
     useEffect(() =>{
         const fetchData = async () =>{
             try {
                 const email = localStorage.getItem('email')
-                const res = await axios.post('http://localhost:8000/api/manager/dashboard/', {email:email} )
+                const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/manager/dashboard/`, {email:email} )
                 setData(res.data)
                 
-                const histres = await axios.post('http://localhost:8000/api/expense-history/', {
+                const histres = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expense-history/`, {
                     email:email
                 })
 
 
-                const sum_res = await axios.post('http://localhost:8000/api/summary_data/' ,{
-                  email: email
-                })
+                // const sum_res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/summary_data/` ,{
+                //   email: email
+                // })
 
                 
 
                 sethistory(histres.data)
+
+
+                let pending = 0;
+                let rejected = 0;
+
+                histres.data.forEach( exp => {
+                  if(exp.status === "Pending"){
+                    pending += exp.amount
+                  }
+                  else if(exp.status === "Rejected"){
+                    rejected += exp.amount
+                  }
+                })
+
+                setpending(pending)
+                setrejected(rejected)
 
 
             } catch (error) {
@@ -60,14 +77,14 @@ const Expense = () => {
         </div>
 
         <div className="bg-white p-4 rounded shadow">
-            <h3 className='font-semibold'>Pending</h3>
-            <p>Amount</p>
+            <h3 className='font-semibold text-yellow-600 text-2xl'>Pending</h3>
+            <p className=' font-semibold text-yellow-600'>{pending}</p>
             <p>Message</p>
         </div>
 
         <div className="bg-white p-4 rounded shadow">
-            <h3 className='font-semibold'>Rejected</h3>
-            <p>Amount</p>
+            <h3 className='font-semibold text-red-600 text-2xl '>Rejected</h3>
+            <p className='font-semibold text-red-600 '>{rejected}</p>
         </div>
       </div>
 

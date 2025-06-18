@@ -29,7 +29,7 @@ const Register = () => {
     console.log('Sending data:', data);
 
     try {
-      const response = await axios.post('http://localhost:8000/auth/send-otp/', data);
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/send-otp/`, data);
 
       if (response.status >= 200 && response.status < 300) {
         alert('OTP sent successfully!');

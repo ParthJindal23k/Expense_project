@@ -13,7 +13,7 @@ const OtherRequest = () => {
     const fecthExpense = async() =>{
       try {
         const email = localStorage.getItem('email');
-        const res = await axios.post('http://localhost:8000/api/Hod-other-request/', {
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Hod-other-request/`, {
           email:email
         })
 
@@ -33,15 +33,15 @@ const OtherRequest = () => {
   const handleAction = async(req_id, action) =>{
     const remark = remarks[req_id] || '';
     try{
-      await axios.post('http://localhost:8000/api/update_request/',{
-        req_id : req_id,
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod_update_request/`,{
+        request_id : req_id,
         action:action,
         remarks : remark
       })
 
       setloading(true);
       const email = localStorage.getItem('email');
-      const res = await axios.post('http://localhost:8000/api/Hod-other-request/', { email });
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Hod-other-request/`, { email });
       setreq(res.data);   
       setloading(false);
 

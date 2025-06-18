@@ -17,7 +17,7 @@ const ManagerProfile = () => {
 
       try {
         const email = localStorage.getItem('email')
-        const res = await axios.post('http://localhost:8000/api/reset-password/',{
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/reset-password/`,{
           email: email,
           password : newpassword
         })
@@ -50,7 +50,7 @@ const ManagerProfile = () => {
         const fetchData = async () =>{
             try {
                 const email = localStorage.getItem('email')
-                const res = await axios.post('http://localhost:8000/api/manager/dashboard/', {email:email} )
+                const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/manager/dashboard/`, {email:email} )
                 setData(res.data)
                 console.log(data.id)
             } catch (error) {

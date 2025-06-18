@@ -19,7 +19,7 @@ const Login = () => {
 
 
     try {
-      const res = await axios.post('http://localhost:8000/auth/login/',data)
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/login/`,data)
 
       if(res.status == 200){
         const role = res.data.role

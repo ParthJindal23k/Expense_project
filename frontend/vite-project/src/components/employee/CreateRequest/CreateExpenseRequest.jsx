@@ -19,7 +19,7 @@ const CreateExpenseRequest = () => {
     formData.append('proof', proof)
 
     try {
-      const res = await axios.post('http://localhost:8000/api/expenses/', formData, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
