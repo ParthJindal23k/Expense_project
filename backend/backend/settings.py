@@ -9,8 +9,7 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -98,12 +97,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'expensetracker',
-        'USER': "newuser",
-        'PASSWORD':'newpassword123',
-        'HOST': "localhost",                          
-        'PORT': '3306'  
-
+        'NAME': 'expense_db',
+        'USER': 'root',
+        'PASSWORD': 'yourpassword',
+        'HOST': 'db',        # must match the service name in docker-compose.yml
+        'PORT': '3306',
     }
 }
 
