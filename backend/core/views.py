@@ -3,8 +3,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.response import Response
+from datetime import timedelta, date
 
-from .models import Employee,Expense,ExpenseRequest
+from .models import Employee,Expense,ExpenseRequest,Policy
 from .serializers import RegisterSerializer,ExpenseSerializer
 import random
 from django.conf import settings
@@ -403,3 +404,24 @@ def Comp_update_request(request):
 
     except ExpenseRequest.DoesNotExist:
         return Response({'error': 'Request not found'}, status=404)
+    
+
+@api_view(['POST'])
+def check_policy(request):
+    email = request.data.get('email')
+    amount = request.data.get('amount')
+    try:
+        emp = Employee.objects.get(email = email)
+    except:
+        return Response({"status": "error", "message": "Employee not found"}, status=404)
+    
+    policies = Policy.objects.filter(grade = emp.grade ,department_id = emp.department_id  )
+    today = date.today()
+
+    for policy in policies:
+        if policy.duration == 'weekly':
+            weekday = today.weekday()
+            
+
+            
+
