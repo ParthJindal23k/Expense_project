@@ -11,15 +11,25 @@ const CreateExpenseRequest = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const formData = new FormData()
-    formData.append('email', email)
-    formData.append('date', date)
-    formData.append('note', note)
-    formData.append('amount', amount)
-    formData.append('proof', proof)
-
     try {
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
+      const policyCheck = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/check-policy/`, {
+        email : email,
+        amount : amount
+      })
+
+      const status = policyCheck.data.status;
+      if(status == 'allowed'){
+        
+      const formData = new FormData()
+      formData.append('email', email)
+      formData.append('date', date)
+      formData.append('note', note)
+      formData.append('amount', amount)
+      formData.append('proof', proof)
+
+
+
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -34,9 +44,28 @@ const CreateExpenseRequest = () => {
       } else {
         alert('Something went wrong')
       }
+      }
+      else if(status === 'soft_violation'){
+        const confirm = window.confirm("This exceed soft policy limits. Do you want to request HOD approvals?");
+        if(confirm){
+          await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/request-hod-policy-approval`,{
+            email:email,
+            date:date,
+            note:note,
+            amount:amount
+
+          })
+
+          alert("Request sent to HOD for approval.");
+        }
+      }
+      else if (status === 'hard_violation') {
+      alert("This expense violates a hard policy. You are not allowed to create this expense.");
+    }
+
     } catch (error) {
-      alert('Failed to submit expense')
-      console.log(error)
+      alert("failed.");
+      console.log(error);
     }
   }
 

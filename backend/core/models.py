@@ -76,3 +76,20 @@ class ExpenseRequest(models.Model):
 
     def __str__(self):
         return f"{self.level} approval for Expense {self.expense.expense_id}"
+    
+
+
+class Policy(models.Model):
+    GRADE_CHOICES = [('A1','Grade A1'),('A2', 'Grade A2'), ('B1', 'Grade B1'), ('B2', 'Grade B2'), ('B3', 'Grade B3')]
+
+
+    policy_name = models.CharField(max_length= 100)
+    grade = models.CharField(max_length=2,choices=GRADE_CHOICES, blank=True, null=True)
+    department_id = models.IntegerField()
+    limit_amount = models.IntegerField()
+    duration = models.CharField(max_length= 10 , choices=[('Weekly', 'Weekly'), ('Monthly','Monthly')])
+    policy_type = models.CharField(max_length=10, choices=[('Hard', 'Hard'), ('Soft', 'Soft')])
+
+
+    def __str__(self):
+        return self.policy_name

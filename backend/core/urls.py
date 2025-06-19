@@ -16,7 +16,8 @@ urlpatterns = [
     path('Hod-other-request/' ,get_Hod_Other_request ),
     path('hod_update_request/' , hod_update_request),
     path('Comp-other-request/', comp_other_request),
-    path('Comp_update_request/', Comp_update_request)
+    path('Comp_update_request/', Comp_update_request),
+    # path('check-policy/', check_policy)
 
 
 
