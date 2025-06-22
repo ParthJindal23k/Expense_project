@@ -14,7 +14,7 @@ const CreateExpenseRequest = () => {
     try {
       const policyCheck = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/check-policy/`, {
         email : email,
-        amount : amount
+        amount: parseInt(amount)
       })
 
       const status = policyCheck.data.status;

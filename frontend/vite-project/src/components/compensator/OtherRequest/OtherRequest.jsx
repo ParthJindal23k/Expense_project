@@ -3,18 +3,18 @@ import React, { useEffect, useState } from 'react'
 
 const OtherRequest = () => {
 
-  const [tab , settab] = useState('Approved')
-  const [req,setreq] = useState([])
-  const [loading , setloading] = useState(true)
+  const [tab, settab] = useState('Approved')
+  const [req, setreq] = useState([])
+  const [loading, setloading] = useState(true)
   const [remarks, setRemarks] = useState({});
 
 
-  useEffect(() =>{
-    const fecthExpense = async() =>{
+  useEffect(() => {
+    const fecthExpense = async () => {
       try {
         const email = localStorage.getItem('email');
         const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Comp-other-request/`, {
-          email:email
+          email: email
         })
 
         setreq(res.data)
@@ -23,101 +23,111 @@ const OtherRequest = () => {
         console.log('Error fetching data', error);
         setloading(false);
       }
-    } 
+    }
 
     fecthExpense()
 
-  },[])
+  }, [])
 
 
-  const handleAction = async(req_id, action) =>{
+  const handleAction = async (req_id, action) => {
     const remark = remarks[req_id] || '';
-    try{
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Comp_update_request/`,{
-        request_id : req_id,
-        action:action,
-        remarks : remark
+    try {
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Comp_update_request/`, {
+        request_id: req_id,
+        action: action,
+        remarks: remark
       })
 
       setloading(true);
       const email = localStorage.getItem('email');
       const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Comp-other-request/`, { email });
-      setreq(res.data);   
+      setreq(res.data);
       setloading(false);
 
     }
-    catch(error){
+    catch (error) {
       console.log('Update failed', error);
     }
   }
 
-  const status_req = req.filter((r) => r.status === tab )
+  const status_req = req.filter((r) => r.status === tab)
 
   return (
     <div className="bg-white p-6 rounded-xl shadow w-full">
       <h2 className="text-2xl font-semibold mb-6">Other Requests</h2>
       <div className="space-x-3 mb-6">
-        {['Approved' , 'Paid' ].map((val) =>(
-          <button key = {val} onClick={() => settab(val)} className= {`px-4 py-2 rounded-full ${tab === val ? 'bg-purple-600 text-white ' : 'bg-gray-200 text-gray-700'} `} >{val}</button>
-        ))   }
-        </div>  
+        {['Approved', 'Paid'].map((val) => (
+          <button key={val} onClick={() => settab(val)} className={`px-4 py-2 rounded-full ${tab === val ? 'bg-purple-600 text-white ' : 'bg-gray-200 text-gray-700'} `} >{val}</button>
+        ))}
+      </div>
 
-        {loading ?  
-         ( <p>Loading...</p>)
-        : 
-          (
-            <table className="min-w-full border text-left">
-              <thead>
-                <tr className='border-b'>
-                  <th className='py-2 px-3'>Raised by</th>
-                  <th className='py-2 px-3'>Expense Date</th>
-                  <th className='py-2 px-3'>Request Date</th>
-                  <th className='py-2 px-3'>Note</th>
-                  <th className='py-2 px-3'>Amount</th>
-                  <th className='py-2 px-3'>Status</th>
-                  {tab === 'Approved' && <th className="py-2 px-3">Remarks & Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {status_req.map((data,idx) => (
-                  <tr  key={idx} className="border-b">
-                    <td className="py-2 px-3">{data.raised_by}</td>
-                    <td className="py-2 px-3">{data.expense_date}</td>
-                    <td className="py-2 px-3">{data.request_date.slice(0, 16).replace('T', ' ')}</td>
-                    <td className="py-2 px-3">{data.note}</td>
-                    <td className="py-2 px-3">{data.amount}</td>
-                    <td className="py-2 px-3">{data.status}</td>
-                    {tab === 'Approved' && (
-                  <td className="py-2 px-3 space-y-2">
-                    <input
-                      type="text"
-                      placeholder="Remarks"
-                      value={remarks[data.request_id] || ''}
-                      onChange={(e) =>
-                        setRemarks({ ...remarks, [data.request_id]: e.target.value })
-                      }
-                      className="border rounded px-2 py-1 w-full"
-                    />
-                    <div className="space-x-2 mt-2">
-                      <button
-                        className="bg-green-500 text-white px-2 py-1 rounded"
-                        onClick={() => handleAction(data.request_id, 'paid')}
-                      >
-                        Paid
-                      </button>
-                      
-                      
-                    </div>
+      {loading ?
+        (<p>Loading...</p>)
+        :
+        (
+          <table className="min-w-full border text-left">
+            <thead>
+              <tr className='border-b'>
+                <th className='py-2 px-3'>Raised by</th>
+                <th className='py-2 px-3'>Expense Date</th>
+                <th className='py-2 px-3'>Request Date</th>
+                <th className='py-2 px-3'>Note</th>
+                <th className='py-2 px-3'>Amount</th>
+                <th className='py-2 px-3'>Status</th>
+                {tab === 'Approved' && <th className="py-2 px-3">Remarks & Actions</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {status_req.map((data, idx) => (
+                <tr key={idx} className="border-b">
+                  <td className="py-2 px-3">{data.raised_by}</td>
+                  <td className="py-2 px-3">{data.expense_date}</td>
+                  <td className="py-2">
+                    {new Date(data.request_date).toLocaleString('en-IN', {
+                      timeZone: 'Asia/Kolkata',
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
                   </td>
-                )}
+                  <td className="py-2 px-3">{data.note}</td>
+                  <td className="py-2 px-3">{data.amount}</td>
+                  <td className="py-2 px-3">{data.status}</td>
+                  {tab === 'Approved' && (
+                    <td className="py-2 px-3 space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Remarks"
+                        value={remarks[data.request_id] || ''}
+                        onChange={(e) =>
+                          setRemarks({ ...remarks, [data.request_id]: e.target.value })
+                        }
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                      <div className="space-x-2 mt-2">
+                        <button
+                          className="bg-green-500 text-white px-2 py-1 rounded"
+                          onClick={() => handleAction(data.request_id, 'paid')}
+                        >
+                          Paid
+                        </button>
 
 
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
-        }
+                      </div>
+                    </td>
+                  )}
+
+
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      }
 
     </div>
   )

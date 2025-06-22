@@ -3,7 +3,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.response import Response
-from datetime import timedelta, date
+from datetime import timedelta, date,datetime
+from django.db.models import Sum
 
 from .models import Employee,Expense,ExpenseRequest,Policy
 from .serializers import RegisterSerializer,ExpenseSerializer
@@ -176,16 +177,19 @@ def expense_history(request):
     except:
         return Response({'error':"User not found"}, status=404)
     
-    expense_requested = ExpenseRequest.objects.filter(expense__emp = emp).order_by('-time')
+    expenses = Expense.objects.filter(emp=emp).order_by('-date')
 
     history_data = []
-    for req in expense_requested:
+    for exp in expenses:
+        latest_req = ExpenseRequest.objects.filter(expense=exp).order_by('-time').first()
+
         history_data.append({
-            "expense_date" : req.expense.date,
-            'request_date': req.time,
-            'note': req.expense.note,
-            'amount': req.expense.amount,
-            'status': req.status
+            "expense_date": exp.date,
+            "request_date": latest_req.time if latest_req else "", 
+            "note": exp.note,
+            "amount": exp.amount,
+            "status": exp.status,
+            "remarks": latest_req.remarks if latest_req and latest_req.remarks else ""
         })
 
     return Response(history_data)
@@ -232,11 +236,13 @@ def update_request(request):
     
     try:
         req = ExpenseRequest.objects.get(request_id=request_id)
+        exp = req.expense
 
         if action == 'approve':
             req.status = 'Approved'
             req.remarks = remarks
             req.save()
+
 
             ExpenseRequest.objects.create(
                 expense=req.expense,
@@ -250,6 +256,9 @@ def update_request(request):
             req.status = 'Rejected'
             req.remarks = remarks
             req.save()
+
+            exp.status = 'Rejected'
+            exp.save()
 
         else:
             return Response({'error': 'Invalid action'}, status=400)
@@ -330,17 +339,23 @@ def hod_update_request(request):
     
     try:
         req = ExpenseRequest.objects.get(request_id=request_id)
+        exp = req.expense
 
         if action == 'approve':
             req.status = 'Approved'
             req.remarks = remarks
             req.save()
+            exp.status = 'Approved'
+            exp.save()
 
 
         elif action == 'reject':
             req.status = 'Rejected'
             req.remarks = remarks
             req.save()
+            exp.status = 'Rejected'
+            exp.save()
+
 
         else:
             return Response({'error': 'Invalid action'}, status=400)
@@ -391,11 +406,16 @@ def Comp_update_request(request):
     
     try:
         req = ExpenseRequest.objects.get(request_id=request_id)
+        exp = req.expense
 
         if action == 'paid':
             req.status = 'Paid'
             req.remarks = remarks
             req.save()
+
+            exp.status = 'Paid'
+            exp.save()
+
 
         else:
             return Response({'error': 'Invalid action'}, status=400)
@@ -409,7 +429,7 @@ def Comp_update_request(request):
 @api_view(['POST'])
 def check_policy(request):
     email = request.data.get('email')
-    amount = request.data.get('amount')
+    amount = int(request.data.get('amount'))
     try:
         emp = Employee.objects.get(email = email)
     except:
@@ -419,8 +439,47 @@ def check_policy(request):
     today = date.today()
 
     for policy in policies:
-        if policy.duration == 'weekly':
+        if policy.duration == 'Weekly':
             weekday = today.weekday()
+            monday = today - timedelta(days=weekday)
+            start_date = datetime.combine(monday, datetime.min.time())
+            end_date = start_date + timedelta(days=6 , hours=23 , minutes= 59 , seconds=59)
+
+        elif policy.duration == 'Monthly':
+            first_day = today.replace(day= 1)
+            if today.month == 12:
+                last_day = date(today + 1, 1, 1) - timedelta(days=1)
+            else:
+                last_day = date(today, today.month + 1 , 1) - timedelta(days=1)
+            start_date = datetime.combine(first_day , datetime.min.time())
+            end_date = datetime.combine(last_day, datetime.max.time())
+
+        
+        total_spent = Expense.objects.filter(
+            emp = emp,
+            date__range = (start_date, end_date)
+        ).aggregate(total = Sum('amount'))['total'] or 0
+
+        if total_spent + amount > policy.limit_amount:
+            if policy.policy_type == "Hard":
+                return Response({
+                    "status" : "hard_violation",
+                    "message" :f"Hard policy violated: {policy.policy_name}",
+                    "limit": policy.limit_amount,
+                    "spent": total_spent,
+                    
+                })
+            elif policy.policy_type == "Soft":
+                return Response({
+                    "status": "soft_violation",
+                    "message": f"Soft policy violated: {policy.policy_name}",
+                    "limit": policy.limit_amount,
+                    "spent": total_spent,
+                })
+            
+        return Response({"status": "allowed"})
+
+
             
 
             

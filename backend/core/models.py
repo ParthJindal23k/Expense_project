@@ -39,6 +39,14 @@ class Department(models.Model):
     
 
 class Expense(models.Model):
+
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+        ('Paid', 'Paid')
+    ]
+
     
     expense_id = models.AutoField(primary_key=True)
     emp = models.ForeignKey(Employee , on_delete=models.CASCADE , related_name='expenses')
@@ -46,6 +54,7 @@ class Expense(models.Model):
     note = models.CharField(max_length=500)
     amount = models.IntegerField()
     proof= models.FileField(upload_to='expense_proofs/')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
     def __str__(self):
         return  f"Expense {self.expense_id} by {self.emp.email}"
