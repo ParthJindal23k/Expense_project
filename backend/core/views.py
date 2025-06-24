@@ -3,8 +3,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.response import Response
-from datetime import timedelta, date,datetime
-from django.db.models import Sum
+from datetime import timedelta, date
 
 from .models import Employee,Expense,ExpenseRequest,Policy
 from .serializers import RegisterSerializer,ExpenseSerializer
@@ -177,19 +176,19 @@ def expense_history(request):
     except:
         return Response({'error':"User not found"}, status=404)
     
-    expenses = Expense.objects.filter(emp=emp).order_by('-date')
+    expenses = Expense.objects.filter(emp = emp).order_by('-date')
 
     history_data = []
     for exp in expenses:
-        latest_req = ExpenseRequest.objects.filter(expense=exp).order_by('-time').first()
+        latest_req = ExpenseRequest.objects.filter(expense = exp).order_by('-time').first()
 
         history_data.append({
-            "expense_date": exp.date,
-            "request_date": latest_req.time if latest_req else "", 
-            "note": exp.note,
-            "amount": exp.amount,
-            "status": exp.status,
-            "remarks": latest_req.remarks if latest_req and latest_req.remarks else ""
+            "expense_date" : exp.date,
+            'request_date': latest_req.time if latest_req else "",
+            'note': exp.note,
+            'amount': exp.amount,
+            'status': exp.status,
+            "reason": latest_req.remarks if latest_req and latest_req.remarks else ""
         })
 
     return Response(history_data)
@@ -203,7 +202,7 @@ def get_other_request(request):
         emp= Employee.objects.get(email = email)
         department = emp.department
         emp_req = ExpenseRequest.objects.filter(
-            expense__emp__department = department,
+            expense_emp_department = department,
             level = 'L1'
         ).select_related('expense','required_by')
 
@@ -211,7 +210,8 @@ def get_other_request(request):
         for req in emp_req:
             result.append({
                 'request_id': req.request_id,
-                'raised_by' : req.expense.emp.id,
+                'raised_by_id' : req.expense.emp.id,
+                'raised_by_name' : req.expense.emp.username,
                 'expense_date' : str(req.expense.date),
                 'request_date' : str(req.time),
                 'note': req.expense.note,
@@ -243,7 +243,6 @@ def update_request(request):
             req.remarks = remarks
             req.save()
 
-
             ExpenseRequest.objects.create(
                 expense=req.expense,
                 required_by=req.required_by,
@@ -259,6 +258,7 @@ def update_request(request):
 
             exp.status = 'Rejected'
             exp.save()
+
 
         else:
             return Response({'error': 'Invalid action'}, status=400)
@@ -296,29 +296,33 @@ def get_Hod_Other_request(request):
     email = request.data.get("email")
 
     try:
-        emp= Employee.objects.get(email = email)
+        emp = Employee.objects.get(email=email)
         department = emp.department
+
+        # Fetch all HoD-level requests in this department
         emp_req = ExpenseRequest.objects.filter(
-            expense__emp__department = department,
-            level = 'HoD'
-        ).select_related('expense','required_by')
+            expense_emp_department=department,
+            level='HoD'
+        ).select_related('expense', 'required_by')
 
         result = []
         for req in emp_req:
             result.append({
                 'request_id': req.request_id,
-                'raised_by' : req.expense.emp.id,
-                'expense_date' : str(req.expense.date),
-                'request_date' : str(req.time),
+                'raised_by_id': req.expense.emp.id,
+                'raised_by_name': req.expense.emp.username,
+                'expense_date': str(req.expense.date),
+                'request_date': str(req.time),
                 'note': req.expense.note,
-                "amount" : req.expense.amount,
+                "amount": req.expense.amount,
                 "status": req.status,
-                'remarks' : req.remarks or ''
+                'remarks': req.remarks or ''
             })
 
         return Response(result)
-    except:
-        return Response({'error': 'Manager not found'}, status=400)
+    except Exception as e:
+        return Response({'error': str(e)}, status=400)
+
     
 
 @api_view(['POST'])
@@ -356,7 +360,6 @@ def hod_update_request(request):
             exp.status = 'Rejected'
             exp.save()
 
-
         else:
             return Response({'error': 'Invalid action'}, status=400)
 
@@ -375,7 +378,7 @@ def comp_other_request(request):
         emp= Employee.objects.get(email = email)
         department = emp.department
         emp_req = ExpenseRequest.objects.filter(
-            expense__emp__department = department,
+            expense_emp_department = department,
             level = 'HoD',
             status__in = ['Approved', 'Paid'] 
         ).select_related('expense','required_by')
@@ -384,7 +387,8 @@ def comp_other_request(request):
         for req in emp_req:
             result.append({
                 'request_id': req.request_id,
-                'raised_by' : req.expense.emp.id,
+                'raised_by_id' : req.expense.emp.id,
+                'raised_by_name' : req.expense.emp.username,
                 'expense_date' : str(req.expense.date),
                 'request_date' : str(req.time),
                 'note': req.expense.note,
@@ -416,7 +420,6 @@ def Comp_update_request(request):
             exp.status = 'Paid'
             exp.save()
 
-
         else:
             return Response({'error': 'Invalid action'}, status=400)
 
@@ -425,7 +428,6 @@ def Comp_update_request(request):
     except ExpenseRequest.DoesNotExist:
         return Response({'error': 'Request not found'}, status=404)
     
-
 @api_view(['POST'])
 def check_policy(request):
     email = request.data.get('email')
@@ -478,9 +480,3 @@ def check_policy(request):
                 })
             
         return Response({"status": "allowed"})
-
-
-            
-
-            
-

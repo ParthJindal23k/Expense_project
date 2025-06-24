@@ -41,7 +41,7 @@ const OtherRequest = () => {
 
       setloading(true);
       const email = localStorage.getItem('email');
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Comp-other-request/`, { email });
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Comp-other-request/`  , { email });
       setreq(res.data);
       setloading(false);
 
@@ -69,11 +69,12 @@ const OtherRequest = () => {
           <table className="min-w-full border text-left">
             <thead>
               <tr className='border-b'>
-                <th className='py-2 px-3'>Raised by</th>
+                <th className='py-2 px-3'>Emp Id</th>
+                <th className='py-2 px-3'>Emp Name</th>
                 <th className='py-2 px-3'>Expense Date</th>
-                <th className='py-2 px-3'>Request Date</th>
+                <th className='py-2 px-3'>Expense Created Date</th>
                 <th className='py-2 px-3'>Note</th>
-                <th className='py-2 px-3'>Amount</th>
+                <th className='py-2 px-3 text-center pr-8'>Amount</th>
                 <th className='py-2 px-3'>Status</th>
                 {tab === 'Approved' && <th className="py-2 px-3">Remarks & Actions</th>}
               </tr>
@@ -81,22 +82,21 @@ const OtherRequest = () => {
             <tbody>
               {status_req.map((data, idx) => (
                 <tr key={idx} className="border-b">
-                  <td className="py-2 px-3">{data.raised_by}</td>
+                  <td className="py-2 px-3">{data.raised_by_id}</td>
+                  <td className="py-2 px-3">{data.raised_by_name}</td>
                   <td className="py-2 px-3">{data.expense_date}</td>
-                  <td className="py-2">
-                    {new Date(data.request_date).toLocaleString('en-IN', {
-                      timeZone: 'Asia/Kolkata',
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true
-                    })}
+                  <td className="py-3 pl-6 font-medium">
+                    {data.request_date
+                      ? new Date(data.request_date).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })
+                      : 'N/A'}
                   </td>
                   <td className="py-2 px-3">{data.note}</td>
-                  <td className="py-2 px-3">{data.amount}</td>
-                  <td className="py-2 px-3">{data.status}</td>
+                  <td className="py-2 px-3 text-right pr-30">{data.amount}</td>
+                  <td className="py-2 px-3 pl-6">{data.status}</td>
                   {tab === 'Approved' && (
                     <td className="py-2 px-3 space-y-2">
                       <input

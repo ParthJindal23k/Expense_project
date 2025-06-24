@@ -5,7 +5,6 @@ import React, { useEffect, useState } from 'react'
 const Expense = () => {
 
     const [data, setData] = useState(null);
-
     const [history, sethistory] = useState([])
     const [pending, setpending] = useState(0)
     const [rejected, setrejected] = useState(0);
@@ -18,35 +17,27 @@ const Expense = () => {
                 const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/manager/dashboard/`, { email: email })
                 setData(res.data)
 
-                 const histres = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expense-history/`, {
-          email: email
-        })
+                const histres = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expense-history/`, {
+                    email: email
+                })
+
+                sethistory(histres.data)
 
 
-        // const sum_res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/summary_data/` ,{
-        //   email: email
-        // })
+                let pending = 0;
+                let rejected = 0;
 
+                histres.data.forEach(exp => {
+                    if (exp.status === "Pending") {
+                        pending += exp.amount
+                    }
+                    else if (exp.status === "Rejected") {
+                        rejected += exp.amount
+                    }
+                })
 
-
-        sethistory(histres.data)
-
-
-        let pending = 0;
-        let rejected = 0;
-
-        histres.data.forEach(exp => {
-          if (exp.status === "Pending") {
-            pending += exp.amount
-          }
-          else if (exp.status === "Rejected") {
-            rejected += exp.amount
-          }
-        })
-
-        setpending(pending)
-        setrejected(rejected)
-
+                setpending(pending)
+                setrejected(rejected)
 
 
             } catch (error) {
@@ -79,14 +70,14 @@ const Expense = () => {
                 </div>
 
                 <div className="bg-white p-4 rounded shadow">
-                    <h3 className='font-semibold'>Pending</h3>
-                    <p>{pending}</p>
+                    <h3 className='font-semibold text-yellow-600 text-2xl'>Pending</h3>
+                    <p className=' font-semibold text-yellow-600'>{pending}</p>
                     <p>Message</p>
                 </div>
 
                 <div className="bg-white p-4 rounded shadow">
-                    <h3 className='font-semibold'>{rejected}</h3>
-                    <p>Amount</p>
+                    <h3 className='font-semibold text-red-600 text-2xl '>Rejected</h3>
+                    <p className='font-semibold text-red-600 '>{rejected}</p>
                 </div>
             </div>
 
@@ -95,42 +86,52 @@ const Expense = () => {
                 <table className="w-full">
                     <thead>
                         <tr className="bg-gradient-to-r from-pink-300 to-pink-800 text-transparent bg-clip-text">
-                            <th className='pb-2  '>Expense Date</th>
-                            <th className="pb-2  ">Expense Request Date</th>
-                            <th className="pb-2  ">Note</th>
-                            <th className="pb-2  ">Amount</th>
-                            <th className="pb-2 ">Status</th>
+                            <th className='pb-2'>Expense Date</th>
+                            <th className="pb-2">Expense Created Date</th>
+                            <th className="pb-2">Note</th>
+                            <th className="pb-2">Amount</th>
+                            <th className="pb-2">Status</th>
                         </tr>
 
                     </thead>
                     <tbody className='text-center'>
                         {history.map((data, id) => (
                             <tr key={id}>
-                                <td className=" py-2">{data.expense_date}</td>
                                 <td className="py-2">
-                                    {new Date(data.request_date).toLocaleString('en-IN', {
-                                        timeZone: 'Asia/Kolkata',
-                                        year: 'numeric',
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit',
-                                        hour12: true
-                                    })}
+                                    {new Date(data.expense_date).toLocaleDateString('en-GB')}
                                 </td>
+                                <td className="py-3">
+                                    {data.request_date
+                                        ? new Date(data.request_date).toLocaleDateString('en-IN', {
+                                            day: 'numeric',
+                                            month: 'short',
+                                            year: 'numeric'
+                                        })
+                                        : 'N/A'}
+                                </td>
+                                <td className="py-2 text-black">{data.note}</td>
 
-                                <td className=" py-2">{data.note}</td>
-                                <td className=" py-2">{data.amount}</td>
+
+                                <td className="py-2 pl-6 font-medium">{data.amount}</td>
+
+
                                 <td className={`font-semibold px-2 py-1 rounded 
-                    ${data.status === 'Approved' ? 'text-green-600 bg-green-100' :
+        ${data.status === 'Approved' ? 'text-green-600 bg-green-100' :
                                         data.status === 'Pending' ? 'text-yellow-600 bg-yellow-100' :
-                                          data.status === 'Rejected' ? 'text-red-600 bg-red-100': 'text-green-600 bg-green-100'    }`}>{data.status}</td>
+                                            data.status === 'Paid' ? 'text-blue-600 bg-blue-100' :
+                                                'text-red-600 bg-red-100'}`}>
+                                    {data.status}
+                                    {data.status === 'Rejected' && data.reason && (
+                                        <div className="text-xs mt-1 text-gray-700 font-normal italic">
+                                            Reason: {data.reason}
+                                        </div>
+                                    )}
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-
 
 
 
