@@ -55,6 +55,9 @@ class Expense(models.Model):
     amount = models.IntegerField()
     proof= models.FileField(upload_to='expense_proofs/')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    reason_for_hod = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
 
     def __str__(self):
         return  f"Expense {self.expense_id} by {self.emp.email}"
@@ -81,6 +84,7 @@ class ExpenseRequest(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     remarks = models.CharField(max_length=255, null=True, blank=True)
     time = models.DateTimeField(auto_now=True)
+
 
 
     def __str__(self):

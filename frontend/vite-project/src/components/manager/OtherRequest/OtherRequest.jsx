@@ -13,7 +13,8 @@ const OtherRequest = () => {
     const fecthExpense = async () => {
       try {
         const email = localStorage.getItem('email');
-        const res = await axios.post(` ${import.meta.env.VITE_BACKEND_URL}/api/manager-other-request/`, {
+        console.log("Sending email:", email)
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/manager-other-request/`, {
           email: email
         })
 
@@ -33,16 +34,44 @@ const OtherRequest = () => {
   const handleAction = async (req_id, action) => {
     const remark = remarks[req_id] || '';
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/update_request/`, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/update_request/`, {
         request_id: req_id,
         action: action,
         remarks: remark
-      })
+      })  
+
+      console.log(res.data)
+
+      if (res.data.violation ) {
+        const proceed = window.confirm(
+          ` Policy Violation Detected!\n\n` +
+          `Policy Name: ${res.data.policy_name}\n` +
+          `Type: ${res.data.policy_type}\n` +
+          `Limit: ${res.data.limit}\n` +
+          `Already Spent: ${res.data.spent}\n` +
+          `This Expense: ${res.data.expense_amount}\n\n` +
+          ` Desicion still depend on you.`
+        );
+        
+      if(!proceed){
+        return 
+      }
+        
+      }
+    
+      
+
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/update_request/`, {
+        request_id: req_id,
+        action: action,
+        remarks: remark,
+        force: true 
+      });
 
       setloading(true);
       const email = localStorage.getItem('email');
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/manager-other-request/`, { email });
-      setreq(res.data);
+      const res2 = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/manager-other-request/`, { email });
+      setreq(res2.data);
       setloading(false);
 
     }
@@ -69,13 +98,13 @@ const OtherRequest = () => {
           <table className="min-w-full border text-left">
             <thead>
               <tr className='border-b'>
-                <th className='py-2 px-3'>Emp ID</th>
+                <th className='py-2 px-3'>Emp Code</th>
                 <th className='py-2 px-3'>Emp Name</th>
                 <th className='py-2 px-3'>Expense Date</th>
                 <th className='py-2 px-3'>Expense Created Date</th>
                 <th className='py-2 px-3'>Note</th>
                 <th className='py-2 px-3 text-center'>Amount</th>
-                <th className='py-2 px-3'>Status</th>
+                <th className='py-2 px-3'>Proof</th>
                 {tab === 'Pending' && <th className="py-2 px-3">Remarks & Actions</th>}
               </tr>
             </thead>
@@ -96,7 +125,19 @@ const OtherRequest = () => {
                   </td>
                   <td className="py-2 px-3">{data.note}</td>
                   <td className="py-2 px-3 text-right pr-20">{data.amount}</td>
-                  <td className="py-2 px-3 pl-2">{data.status}</td>
+                  <td className="py-2 px-3 pl-2">{data.proof ? (
+                    <a
+                      href={data.proof}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                      download
+                    >
+                      Download
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 italic">No file</span>
+                  )}</td>
                   {tab === 'Pending' && (
                     <td className="py-2 px-3 space-y-2">
                       <input

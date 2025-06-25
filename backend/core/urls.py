@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_user,verify_otp,login_emp,manager_dashboard,reset_password,expense_request, expense_history,get_other_request, hod_dashboard, update_request, get_Hod_Other_request,hod_update_request, comp_other_request, Comp_update_request, check_policy
+from .views import register_user,verify_otp,login_emp,manager_dashboard,reset_password,expense_request, expense_history,get_other_request, hod_dashboard, update_request, get_Hod_Other_request,hod_update_request, comp_other_request, Comp_update_request, check_policy, hod_policy_approval,hod_soft_policy_requests
 
 urlpatterns = [
     
@@ -17,8 +17,8 @@ urlpatterns = [
     path('hod_update_request/' , hod_update_request),
     path('Comp-other-request/', comp_other_request),
     path('Comp_update_request/', Comp_update_request),
-    path('check-policy/', check_policy)
-
-
+    path('check-policy/', check_policy),
+    path('request-hod-policy-approval/', hod_policy_approval),
+    path('hod-soft-policy-requests/', hod_soft_policy_requests)
 
 ]

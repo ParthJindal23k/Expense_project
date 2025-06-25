@@ -3,12 +3,13 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.response import Response
-from datetime import timedelta, date
-
+from datetime import timedelta, date,datetime
+from django.db.models import Sum
 from .models import Employee,Expense,ExpenseRequest,Policy
 from .serializers import RegisterSerializer,ExpenseSerializer
 import random
 from django.conf import settings
+
 
 
 
@@ -184,7 +185,7 @@ def expense_history(request):
 
         history_data.append({
             "expense_date" : exp.date,
-            'request_date': latest_req.time if latest_req else "",
+            'request_date': exp.created_at,
             'note': exp.note,
             'amount': exp.amount,
             'status': exp.status,
@@ -197,14 +198,18 @@ def expense_history(request):
 @api_view(['POST'])
 def get_other_request(request):
     email = request.data.get("email")
+    
 
     try:
         emp= Employee.objects.get(email = email)
         department = emp.department
         emp_req = ExpenseRequest.objects.filter(
-            expense_emp_department = department,
+            expense__emp__department = department,
             level = 'L1'
         ).select_related('expense','required_by')
+
+        
+
 
         result = []
         for req in emp_req:
@@ -217,6 +222,7 @@ def get_other_request(request):
                 'note': req.expense.note,
                 "amount" : req.expense.amount,
                 "status": req.status,
+                'proof':request.build_absolute_uri(req.expense.proof.url) ,
                 'remarks' : req.remarks or ''
             })
 
@@ -229,36 +235,74 @@ def get_other_request(request):
 
 @api_view(['POST'])
 def update_request(request):
-
     request_id = request.data.get('request_id')
     action = request.data.get('action')  
     remarks = request.data.get('remarks', '')
-    
+    force = request.data.get('force', False)
+
     try:
         req = ExpenseRequest.objects.get(request_id=request_id)
         exp = req.expense
+        emp = exp.emp
 
         if action == 'approve':
+            from datetime import datetime, timedelta
+            today = date.today()
+            policies = Policy.objects.filter(grade=emp.grade, department_id=emp.department_id)
+
+            for policy in policies:
+                if policy.duration == 'Weekly':
+                    weekday = today.weekday()
+                    monday = today - timedelta(days=weekday)
+                    start_date = datetime.combine(monday, datetime.min.time())
+                    end_date = start_date + timedelta(days=6, hours=23, minutes=59, seconds=59)
+                else:
+                    first_day = today.replace(day=1)
+                    if today.month == 12:
+                        last_day = date(today.year + 1, 1, 1) - timedelta(days=1)
+                    else:
+                        last_day = date(today.year, today.month + 1, 1) - timedelta(days=1)
+                    start_date = datetime.combine(first_day, datetime.min.time())
+                    end_date = datetime.combine(last_day, datetime.max.time())
+
+                total_spent = Expense.objects.filter(
+                    emp=emp,
+                    date__range=(start_date, end_date),
+                    status__in=['Pending', 'Approved', 'Paid']
+                ).aggregate(total=Sum('amount'))['total'] or 0
+
+                new_total = total_spent
+
+                if exp.status != 'Approved':
+                    new_total += exp.amount  
+
+                if new_total > policy.limit_amount and not force:
+                    return Response({
+                        "violation": True,
+                        "policy_name": policy.policy_name,
+                        "policy_type": policy.policy_type,
+                        "limit": policy.limit_amount,
+                        "spent": total_spent - exp.amount,
+                        "expense_amount": exp.amount
+                    }, status=200)
+
             req.status = 'Approved'
             req.remarks = remarks
             req.save()
 
             ExpenseRequest.objects.create(
-                expense=req.expense,
-                required_by=req.required_by,
+                expense=exp,
+                required_by=req.required_by.department.HOD,
                 level='HoD',
                 status='Pending',
-
             )
 
         elif action == 'reject':
             req.status = 'Rejected'
             req.remarks = remarks
             req.save()
-
             exp.status = 'Rejected'
             exp.save()
-
 
         else:
             return Response({'error': 'Invalid action'}, status=400)
@@ -301,7 +345,7 @@ def get_Hod_Other_request(request):
 
         # Fetch all HoD-level requests in this department
         emp_req = ExpenseRequest.objects.filter(
-            expense_emp_department=department,
+            expense__emp__department=department,
             level='HoD'
         ).select_related('expense', 'required_by')
 
@@ -316,6 +360,7 @@ def get_Hod_Other_request(request):
                 'note': req.expense.note,
                 "amount": req.expense.amount,
                 "status": req.status,
+                'proof': request.build_absolute_uri(req.expense.proof.url) if req.expense.proof else None,
                 'remarks': req.remarks or ''
             })
 
@@ -378,7 +423,7 @@ def comp_other_request(request):
         emp= Employee.objects.get(email = email)
         department = emp.department
         emp_req = ExpenseRequest.objects.filter(
-            expense_emp_department = department,
+            expense__emp__department = department,
             level = 'HoD',
             status__in = ['Approved', 'Paid'] 
         ).select_related('expense','required_by')
@@ -428,6 +473,7 @@ def Comp_update_request(request):
     except ExpenseRequest.DoesNotExist:
         return Response({'error': 'Request not found'}, status=404)
     
+
 @api_view(['POST'])
 def check_policy(request):
     email = request.data.get('email')
@@ -436,6 +482,7 @@ def check_policy(request):
         emp = Employee.objects.get(email = email)
     except:
         return Response({"status": "error", "message": "Employee not found"}, status=404)
+
     
     policies = Policy.objects.filter(grade = emp.grade ,department_id = emp.department_id  )
     today = date.today()
@@ -447,21 +494,29 @@ def check_policy(request):
             start_date = datetime.combine(monday, datetime.min.time())
             end_date = start_date + timedelta(days=6 , hours=23 , minutes= 59 , seconds=59)
 
+
         elif policy.duration == 'Monthly':
+
             first_day = today.replace(day= 1)
+
             if today.month == 12:
                 last_day = date(today + 1, 1, 1) - timedelta(days=1)
             else:
                 last_day = date(today, today.month + 1 , 1) - timedelta(days=1)
+
             start_date = datetime.combine(first_day , datetime.min.time())
             end_date = datetime.combine(last_day, datetime.max.time())
 
-        
         total_spent = Expense.objects.filter(
             emp = emp,
-            date__range = (start_date, end_date)
-        ).aggregate(total = Sum('amount'))['total'] or 0
+            date__range = (start_date, end_date),
+             status__in=['Approved', 'Paid', 'Pending']
 
+        ).aggregate(total = Sum('amount'))['total'] or 0
+        
+        print(total_spent)
+        print(amount)
+        print(policy.limit_amount)
         if total_spent + amount > policy.limit_amount:
             if policy.policy_type == "Hard":
                 return Response({
@@ -469,8 +524,8 @@ def check_policy(request):
                     "message" :f"Hard policy violated: {policy.policy_name}",
                     "limit": policy.limit_amount,
                     "spent": total_spent,
-                    
                 })
+            
             elif policy.policy_type == "Soft":
                 return Response({
                     "status": "soft_violation",
@@ -478,5 +533,74 @@ def check_policy(request):
                     "limit": policy.limit_amount,
                     "spent": total_spent,
                 })
-            
-        return Response({"status": "allowed"})
+    return Response({"status": "allowed"})
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+def hod_policy_approval(request):
+    email = request.data.get('email')
+    try:
+        emp = Employee.objects.get(email=email)
+    except:
+        return Response({"status": "error", "message": "Employee not found"}, status=404)
+
+    # Remove email from data and pass the rest to serializer
+    data = request.data.copy()
+    data.pop('email', None)
+
+    serializer = ExpenseSerializer(data=data)
+    if serializer.is_valid():
+        expense = serializer.save(emp=emp)
+
+        ExpenseRequest.objects.create(
+            expense=expense,
+            required_by=emp,
+            level="HoD",
+            status="Pending",
+            remarks="Awaiting HOD approval"
+        )
+
+        return Response({
+            "status": "success",
+            "message": "Request sent to HOD for approval."
+        })
+    else:
+        return Response(serializer.errors, status=400)
+    
+
+@api_view(['POST'])
+def hod_soft_policy_requests(request):
+    email = request.data.get('email')
+
+    try:
+        emp = Employee.objects.get(email=email)
+        department = emp.department
+
+        soft_requests = ExpenseRequest.objects.filter(
+            expense__emp__department=department,
+            level='HoD',
+            status='Pending',
+            remarks='Awaiting HOD Approval'
+        ).select_related('expense', 'required_by')
+
+        result = []
+        for req in soft_requests:
+            result.append({
+                'request_id': req.request_id,
+                'raised_by_id': req.expense.emp.id,
+                'raised_by_name': req.expense.emp.username,
+                'expense_date': str(req.expense.date),
+                'request_date': str(req.time),
+                'note': req.expense.note,
+                'reason': req.expense.reason_for_hod,
+                'amount': req.expense.amount,
+                'status': req.status,
+                'remarks': req.remarks or '',
+                'proof': request.build_absolute_uri(req.expense.proof.url) if req.expense.proof else None,
+            })
+
+        return Response(result)
+
+    except Employee.DoesNotExist:
+        return Response({'error': 'Manager not found'}, status=400)

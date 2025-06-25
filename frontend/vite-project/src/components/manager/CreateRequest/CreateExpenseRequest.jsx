@@ -11,32 +11,74 @@ const CreateExpenseRequest = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const formData = new FormData()
-    formData.append('email', email)
-    formData.append('date', date)
-    formData.append('note', note)
-    formData.append('amount', amount)
-    formData.append('proof', proof)
-
     try {
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const policyCheck = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/check-policy/`, {
+        email: email,
+        amount: parseInt(amount)
       })
 
-      if (res.status === 201) {
-        alert('Expense submitted successfully!')
-        setDate('')
-        setNote('')
-        setamount('')
-        setproof(null)
-      } else {
-        alert('Something went wrong')
+      const status = policyCheck.data.status;
+      if (status == 'allowed') {
+
+        const formData = new FormData()
+        formData.append('email', email)
+        formData.append('date', date)
+        formData.append('note', note)
+        formData.append('amount', amount)
+        formData.append('proof', proof)
+
+
+
+        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+
+        if (res.status === 201) {
+          alert('Expense submitted successfully!')
+          setDate('')
+          setNote('')
+          setamount('')
+          setproof(null)
+        } else {
+          alert('Something went wrong')
+        }
       }
+      else if (status === 'soft_violation') {
+        const reason = window.prompt("This exceed soft policy limits. Please enter a reason for requesting HOD approvals:");
+        if (reason && reason.trim() !== "") {
+          const formData = new FormData()
+          formData.append('email', email)
+          formData.append('date', date)
+          formData.append('note', note)
+          formData.append('amount', amount)
+          formData.append('reason_for_hod', reason.trim())
+          formData.append('proof', proof);
+          const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/request-hod-policy-approval/`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+
+         if (res.status === 200) {
+            alert("Request sent to HOD for approval.")
+            setDate('')
+            setNote('')
+            setamount('')
+            setproof(null)
+          } else {
+            alert("Failed to send request to HOD.")
+          }
+        }
+      }
+      else if (status === 'hard_violation') {
+        alert("This expense violates a hard policy. You are not allowed to create this expense.");
+      }
+
     } catch (error) {
-      alert('Failed to submit expense')
-      console.log(error)
+      alert("failed.");
+      console.log(error);
     }
   }
 
@@ -61,8 +103,15 @@ const CreateExpenseRequest = () => {
 
           <div>
             <label htmlFor="b" className='block text-gray-700 font-semibold mb-2'>Date of Expense</label>
-            <input value={date} onChange={(e) => setDate(e.target.value)} className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500' type="date" required id="b" />
-          </div>
+<input
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              type="date"
+              required
+              id="b"
+              max={new Date().toISOString().split("T")[0]} 
+/>          </div>
 
           <div>
             <label htmlFor="c" className='block text-gray-700 font-semibold mb-2'>Note / Description</label>

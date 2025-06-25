@@ -69,7 +69,7 @@ const OtherRequest = () => {
           <table className="min-w-full border text-left">
             <thead>
               <tr className='border-b'>
-                <th className='py-2 px-3'>Emp Id</th>
+                <th className='py-2 px-3'>Emp Code</th>
                 <th className='py-2 px-3'>Emp Name</th>
                 <th className='py-2 px-3'>Expense Date</th>
                 <th className='py-2 px-3'>Expense Created Date</th>

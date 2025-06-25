@@ -13,59 +13,70 @@ const CreateExpenseRequest = () => {
 
     try {
       const policyCheck = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/check-policy/`, {
-        email : email,
+        email: email,
         amount: parseInt(amount)
       })
 
-      const status = policyCheck.data.status;
-      if(status == 'allowed'){
-        
-      const formData = new FormData()
-      formData.append('email', email)
-      formData.append('date', date)
-      formData.append('note', note)
-      formData.append('amount', amount)
-      formData.append('proof', proof)
+      const status = policyCheck.data.status
 
-
+      if (status === 'allowed') {
+        const formData = new FormData()
+        formData.append('email', email)
+        formData.append('date', date)
+        formData.append('note', note)
+        formData.append('amount', amount)
+        formData.append('proof', proof)
 
         const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
 
-      if (res.status === 201) {
-        alert('Expense submitted successfully!')
-        setDate('')
-        setNote('')
-        setamount('')
-        setproof(null)
-      } else {
-        alert('Something went wrong')
-      }
-      }
-      else if(status === 'soft_violation'){
-        const confirm = window.confirm("This exceed soft policy limits. Do you want to request HOD approvals?");
-        if(confirm){
-          await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/request-hod-policy-approval`,{
-            email:email,
-            date:date,
-            note:note,
-            amount:amount
+        if (res.status === 201) {
+          alert('Expense submitted successfully!')
+          setDate('')
+          setNote('')
+          setamount('')
+          setproof(null)
+        } else {
+          alert('Something went wrong')
+        }
 
+      } else if (status === 'soft_violation') {
+        const reason = window.prompt("This exceeds soft policy limits. Please enter a reason for requesting HOD approvals:")
+        if (reason && reason.trim() !== "") {
+          const formData = new FormData()
+          formData.append('email', email)
+          formData.append('date', date)
+          formData.append('note', note)
+          formData.append('amount', amount)
+          formData.append('reason_for_hod', reason.trim())
+          formData.append('proof', proof);
+          const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/request-hod-policy-approval/`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
           })
 
-          alert("Request sent to HOD for approval.");
+          if (res.status === 200) {
+            alert("Request sent to HOD for approval.")
+            setDate('')
+            setNote('')
+            setamount('')
+            setproof(null)
+          } else {
+            alert("Failed to send request to HOD.")
+          }
         }
+
+      } else if (status === 'hard_violation') {
+        alert("This expense violates a hard policy. You are not allowed to create this expense.")
       }
-      else if (status === 'hard_violation') {
-      alert("This expense violates a hard policy. You are not allowed to create this expense.");
-    }
 
     } catch (error) {
-      alert("failed.");
-      console.log(error);
+      alert("Submission failed.")
+      console.log(error)
     }
   }
 
@@ -90,17 +101,40 @@ const CreateExpenseRequest = () => {
 
           <div>
             <label htmlFor="b" className='block text-gray-700 font-semibold mb-2'>Date of Expense</label>
-            <input value={date} onChange={(e) => setDate(e.target.value)} className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500' type="date" required id="b" />
+            <input
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              type="date"
+              required
+              id="b"
+              max={new Date().toISOString().split("T")[0]}
+            />
           </div>
 
           <div>
             <label htmlFor="c" className='block text-gray-700 font-semibold mb-2'>Note / Description</label>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Describe what this expense was for..." className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500' required id="c" />
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Describe what this expense was for..."
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+              required
+              id="c"
+            />
           </div>
 
           <div>
             <label htmlFor="d" className='block text-gray-700 font-semibold mb-2'>Amount (INR)</label>
-            <input value={amount} onChange={(e) => setamount(e.target.value)} placeholder="e.g., 1200" className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500' type="text" required id="d" />
+            <input
+              value={amount}
+              onChange={(e) => setamount(e.target.value)}
+              placeholder="e.g., 1200"
+              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+              type="number"
+              required
+              id="d"
+            />
           </div>
 
           <div>
@@ -117,7 +151,9 @@ const CreateExpenseRequest = () => {
           </div>
 
           <div className="md:col-span-2 flex justify-center pb-10">
-            <button type="submit" className="w-40 bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition duration-200">Submit Expense</button>
+            <button type="submit" className="w-40 bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition duration-200">
+              Submit Expense
+            </button>
           </div>
         </form>
       </div>
