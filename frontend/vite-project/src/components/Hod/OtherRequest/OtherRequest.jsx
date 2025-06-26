@@ -1,5 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const OtherRequest = () => {
   const [tab, settab] = useState('Pending');
@@ -9,60 +11,14 @@ const OtherRequest = () => {
   const [remarks, setRemarks] = useState({});
 
   useEffect(() => {
-    const fetchAllRequests = async () => {
-      setloading(true);
-      const email = localStorage.getItem('email');
-
-      try {
-        if (tab === 'Soft Policy Exception') {
-          const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod-soft-policy-requests/`, { email });
-          setSoftReq(res.data);
-        } else {
-          const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Hod-other-request/`, { email });
-          setreq(res.data);
-        }
-      } catch (error) {
-        console.error('Error fetching data', error);
-      }
-      setloading(false);
-    };
-
     fetchAllRequests();
   }, [tab]);
 
-  const handleAction = async (req_id, action) => {
-    const remark = remarks[req_id] || '';
+  const fetchAllRequests = async () => {
+    setloading(true);
+    const email = localStorage.getItem('email');
+
     try {
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod_update_request/`, {
-        request_id: req_id,
-        action: action,
-        remarks: remark
-      });
-
-
-      if (res.data.violation) {
-      const proceed = window.confirm(
-        `Policy Violation Detected!\n\n` +
-        `Policy Name: ${res.data.policy_name}\n` +
-        `Type: ${res.data.policy_type}\n` +
-        `Limit: ₹${res.data.limit}\n` +
-        `Already Spent: ₹${res.data.spent}\n` +
-        `This Expense: ₹${res.data.expense_amount}\n\n` +
-        `Do you still want to approve it?`
-      );
-
-      if (!proceed) return;
-
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod_update_request/`, {
-        request_id: req_id,
-        action: action,
-        remarks: remark,
-        force: true
-      });
-    }
-
-
-      const email = localStorage.getItem('email');
       if (tab === 'Soft Policy Exception') {
         const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod-soft-policy-requests/`, { email });
         setSoftReq(res.data);
@@ -70,6 +26,62 @@ const OtherRequest = () => {
         const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/Hod-other-request/`, { email });
         setreq(res.data);
       }
+    } catch (error) {
+      console.error('Error fetching data', error);
+    }
+    setloading(false);
+  };
+
+  const handleAction = async (req_id, action) => {
+    const remark = remarks[req_id] || '';
+
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod_update_request/`, {
+        request_id: req_id,
+        action,
+        remarks: remark
+      });
+
+      if (res.data.violation) {
+        toast.info(({ closeToast }) => (
+          <div>
+            <strong>⚠ Policy Violation Detected!</strong>
+            <p>Policy: {res.data.policy_name}</p>
+            <p>Type: {res.data.policy_type}</p>
+            <p>Limit: ₹{res.data.limit}</p>
+            <p>Spent: ₹{res.data.spent}</p>
+            <p>This Expense: ₹{res.data.expense_amount}</p>
+            <div className="flex justify-end mt-2 space-x-2">
+              <button
+                className="bg-green-600 text-white px-3 py-1 rounded"
+                onClick={async () => {
+                  closeToast();
+                  await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod_update_request/`, {
+                    request_id: req_id,
+                    action,
+                    remarks: remark,
+                    force: true
+                  });
+                  fetchAllRequests();
+                }}
+              >
+                Approve Anyway
+              </button>
+              <button
+                className="bg-gray-500 text-white px-3 py-1 rounded"
+                onClick={closeToast}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ), { autoClose: false });
+
+        return;
+      }
+
+      await fetchAllRequests();
+
     } catch (error) {
       console.log('Update failed', error);
     }
@@ -85,6 +97,7 @@ const OtherRequest = () => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow w-full">
+      <ToastContainer />
       <h2 className="text-2xl font-semibold mb-6">Other Requests</h2>
 
       <div className="space-x-3 mb-6">

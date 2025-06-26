@@ -1,5 +1,8 @@
 import axios from 'axios'
 import React, { useEffect ,useState} from 'react'
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"
+
 
 const CompensatorProfile = () => {
 
@@ -11,7 +14,7 @@ const CompensatorProfile = () => {
       e.preventDefault()
 
       if (newpassword !== confirmpassword) {
-        alert("Passwords do not match!");
+        toast.error("Passwords do not match!");
         return;
       }
 
@@ -23,19 +26,19 @@ const CompensatorProfile = () => {
         })
         
         if(res.status = 200){
-          alert('Password reset successful !')
+          toast.success('Password reset successful !')
           setnewpassword('')
           setconfirmpassword('')
         }
         else{
-          alert('something went wrong')
+          toast.error('something went wrong')
           
         }
 
       } catch (error) {
 
         console.error("Password reset failed", error);
-        alert("Something went wrong!");
+        toast.error("Something went wrong!");
 
       }
 

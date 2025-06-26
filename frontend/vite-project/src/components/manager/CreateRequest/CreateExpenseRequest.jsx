@@ -1,5 +1,7 @@
 import axios from 'axios'
 import React, { useState } from 'react'
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CreateExpenseRequest = () => {
   const email = localStorage.getItem('email')
@@ -36,13 +38,13 @@ const CreateExpenseRequest = () => {
         })
 
         if (res.status === 201) {
-          alert('Expense submitted successfully!')
+          toast.success('Expense submitted successfully!')
           setDate('')
           setNote('')
           setamount('')
           setproof(null)
         } else {
-          alert('Something went wrong')
+          toast,error('Something went wrong')
         }
       }
       else if (status === 'soft_violation') {
@@ -62,22 +64,22 @@ const CreateExpenseRequest = () => {
           })
 
          if (res.status === 200) {
-            alert("Request sent to HOD for approval.")
+            toast.success("Request sent to HOD for approval.")
             setDate('')
             setNote('')
             setamount('')
             setproof(null)
           } else {
-            alert("Failed to send request to HOD.")
+            toast.error("Failed to send request to HOD.")
           }
         }
       }
       else if (status === 'hard_violation') {
-        alert("This expense violates a hard policy. You are not allowed to create this expense.");
+        toast.info("This expense violates a hard policy. You are not allowed to create this expense.");
       }
 
     } catch (error) {
-      alert("failed.");
+      toast.error("failed.");
       console.log(error);
     }
   }

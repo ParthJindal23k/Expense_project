@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_user,verify_otp,login_emp,manager_dashboard,reset_password,expense_request, expense_history,get_other_request, hod_dashboard, update_request, get_Hod_Other_request,hod_update_request, comp_other_request, Comp_update_request, check_policy, hod_policy_approval,hod_soft_policy_requests
+from .views import register_user,verify_otp,login_emp,manager_dashboard,reset_password,expense_request, expense_history,get_other_request, hod_dashboard, update_request, get_Hod_Other_request,hod_update_request, comp_other_request, Comp_update_request, check_policy, hod_policy_approval,hod_soft_policy_requests, exp_paid_history
 
 urlpatterns = [
     
@@ -19,6 +19,8 @@ urlpatterns = [
     path('Comp_update_request/', Comp_update_request),
     path('check-policy/', check_policy),
     path('request-hod-policy-approval/', hod_policy_approval),
-    path('hod-soft-policy-requests/', hod_soft_policy_requests)
+    path('hod-soft-policy-requests/', hod_soft_policy_requests),
+    path('exp_paid_history/',exp_paid_history ),
+    # path('exp_paid_history_week/' , exp_paid_history_week)
 
 ]

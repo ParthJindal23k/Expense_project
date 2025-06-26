@@ -46,7 +46,7 @@ const CreateExpenseRequest = () => {
           setamount('')
           setproof(null)
         } else {
-          alert('Something went wrong')
+          toast.error("Something went wrong")
         }
 
       } else if (status === 'soft_violation') {
@@ -66,22 +66,22 @@ const CreateExpenseRequest = () => {
           })
 
           if (res.status === 200) {
-            alert("Request sent to HOD for approval.")
+            toast.success("Request sent to HOD for approval.")
             setDate('')
             setNote('')
             setamount('')
             setproof(null)
           } else {
-            alert("Failed to send request to HOD.")
+            toast.error("Failed to send request to HOD.")
           }
         }
 
       } else if (status === 'hard_violation') {
-        alert("This expense violates a hard policy. You are not allowed to create this expense.")
+        toast.info("This expense violates a hard policy. You are not allowed to create this expense.")
       }
 
     } catch (error) {
-      alert("Submission failed.")
+      toast.error("Submission failed.")
       console.log(error)
     }
   }

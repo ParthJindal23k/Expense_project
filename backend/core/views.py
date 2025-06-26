@@ -273,8 +273,10 @@ def update_request(request):
 
                 new_total = total_spent
 
-                if exp.status != 'Approved':
-                    new_total += exp.amount  
+                if exp.status in ['Pending', 'Approved', 'Paid']:
+                    new_total = total_spent  
+                else:
+                    new_total = total_spent + exp.amount 
 
                 if new_total > policy.limit_amount and not force:
                     return Response({
@@ -290,12 +292,18 @@ def update_request(request):
             req.remarks = remarks
             req.save()
 
-            ExpenseRequest.objects.create(
+            if not ExpenseRequest.objects.filter(
                 expense=exp,
                 required_by=req.required_by.department.HOD,
                 level='HoD',
-                status='Pending',
-            )
+                status='Pending'
+                ).exists():
+                ExpenseRequest.objects.create(
+                    expense=exp,
+                    required_by=req.required_by.department.HOD,
+                    level='HoD',
+                    status='Pending',
+                )
 
         elif action == 'reject':
             req.status = 'Rejected'
@@ -645,3 +653,34 @@ def hod_soft_policy_requests(request):
 
     except Employee.DoesNotExist:
         return Response({'error': 'Manager not found'}, status=400)
+
+
+@api_view(['POST'])
+def exp_paid_history(request):
+    email = request.data.get('email')
+    start_date = request.data.get('start_date')
+    end_date = request.data.get('end_date')
+
+    try:
+        emp = Employee.objects.get(email=email)
+        expenses = Expense.objects.filter(emp=emp, status='Paid')
+
+        if start_date and end_date:
+
+            start = datetime.strptime(start_date, '%Y-%m-%d').date()
+
+            end = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            expenses = expenses.filter(date__range=(start, end))
+        elif start_date:
+            start = datetime.strptime(start_date, '%Y-%m-%d').date()
+            expenses = expenses.filter(date__gte=start)
+        elif end_date:
+            end = datetime.strptime(end_date, '%Y-%m-%d').date()
+            expenses = expenses.filter(date__lte=end)
+
+        serializer = ExpenseSerializer(expenses, many=True)
+        return Response(serializer.data)
+
+    except Employee.DoesNotExist:
+        return Response({'error': 'Employee not found'}, status=404)

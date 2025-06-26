@@ -75,23 +75,22 @@ const Expense = () => {
             <h1 className='text-2xl font-bold mb-6'>Welcome, {data ? data.username : "user"}!</h1>
 
             <div className="grid grid-cols-2 gap-4 mb-8 ">
-                <div className="bg-white p-4 rounded shadow">
-                    <h3 className='font-semibold'> Total Reimbursed this week</h3>
-                    <p>1200</p>
-                    <p>Limit</p>
-
-                </div>
 
                 <div className="bg-white p-4 rounded shadow">
-                    <h3 className='font-semibold'>Total Reimbursed this month</h3>
-                    <p>2800</p>
-                    <p>Limit</p>
+                    <h3 className='font-semibold'>Paid History</h3>
+                   
+                    <button
+                        className="bg-blue-600 text-white px-4 py-2 rounded mt-4"
+                        onClick={() => window.location.href = "/month-history"}
+                    >
+                        View Paid History
+                    </button>
                 </div>
 
                 <div className="bg-white p-4 rounded shadow">
                     <h3 className='font-semibold text-yellow-600 text-2xl'>Pending</h3>
                     <p className=' font-semibold text-yellow-600'>{pending}</p>
-                    <p>Message</p>
+                    
                 </div>
 
                 <div className="bg-white p-4 rounded shadow">

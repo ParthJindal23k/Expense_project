@@ -10,6 +10,7 @@ import ManagerDashboard from './pages/ManagerDashboard'
 import CompensatorDashboard from './pages/CompensatorDashboard'
 import { ToastContainer } from 'react-toastify';  
 import 'react-toastify/dist/ReactToastify.css';
+import PaidHistory from './components/PaidHistory'
 
 const App = () => {
   return (
@@ -23,7 +24,8 @@ const App = () => {
         <Route path = '/Hod-Dashboard' element = {<HodDashboard/>}/>
         <Route path = '/Manager-Dashboard' element = {<ManagerDashboard/>}/>
         <Route path = '/Compensator-Dashboard' element = {<CompensatorDashboard/>}/>
-      </Routes>
+         <Route path="/month-history" element={<PaidHistory />} />
+     </Routes>
 
       <ToastContainer position="top-right" autoClose={3000} />
     </BrowserRouter>
