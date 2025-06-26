@@ -33,11 +33,34 @@ const OtherRequest = () => {
   const handleAction = async (req_id, action) => {
     const remark = remarks[req_id] || '';
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod_update_request/`, {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod_update_request/`, {
         request_id: req_id,
         action: action,
         remarks: remark
       });
+
+
+      if (res.data.violation) {
+      const proceed = window.confirm(
+        `Policy Violation Detected!\n\n` +
+        `Policy Name: ${res.data.policy_name}\n` +
+        `Type: ${res.data.policy_type}\n` +
+        `Limit: ₹${res.data.limit}\n` +
+        `Already Spent: ₹${res.data.spent}\n` +
+        `This Expense: ₹${res.data.expense_amount}\n\n` +
+        `Do you still want to approve it?`
+      );
+
+      if (!proceed) return;
+
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/hod_update_request/`, {
+        request_id: req_id,
+        action: action,
+        remarks: remark,
+        force: true
+      });
+    }
+
 
       const email = localStorage.getItem('email');
       if (tab === 'Soft Policy Exception') {

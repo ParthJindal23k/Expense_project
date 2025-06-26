@@ -1,5 +1,7 @@
 import axios from 'axios'
 import React, { useState } from 'react'
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CreateExpenseRequest = () => {
   const email = localStorage.getItem('email')
@@ -7,6 +9,10 @@ const CreateExpenseRequest = () => {
   const [note, setNote] = useState('')
   const [amount, setamount] = useState('')
   const [proof, setproof] = useState(null)
+
+  const notify = () =>{
+    toast.success('Expense submitted successfully!')
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -34,7 +40,7 @@ const CreateExpenseRequest = () => {
         })
 
         if (res.status === 201) {
-          alert('Expense submitted successfully!')
+          notify()
           setDate('')
           setNote('')
           setamount('')

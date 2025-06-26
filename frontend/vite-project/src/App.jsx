@@ -8,6 +8,8 @@ import EmpDashboard from './pages/EmpDashboard'
 import HodDashboard from './pages/HodDashboard'
 import ManagerDashboard from './pages/ManagerDashboard'
 import CompensatorDashboard from './pages/CompensatorDashboard'
+import { ToastContainer } from 'react-toastify';  
+import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
   return (
@@ -22,6 +24,8 @@ const App = () => {
         <Route path = '/Manager-Dashboard' element = {<ManagerDashboard/>}/>
         <Route path = '/Compensator-Dashboard' element = {<CompensatorDashboard/>}/>
       </Routes>
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </BrowserRouter>
   )
 }

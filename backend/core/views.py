@@ -383,20 +383,61 @@ def summary_request(request):
 @api_view(['POST'])
 def hod_update_request(request):
     request_id = request.data.get('request_id')
-    action = request.data.get('action')  
+    action = request.data.get('action')
     remarks = request.data.get('remarks', '')
-    
+    force = request.data.get('force', False)
+
     try:
         req = ExpenseRequest.objects.get(request_id=request_id)
         exp = req.expense
+        emp = exp.emp
 
         if action == 'approve':
+            from datetime import datetime, timedelta, date
+            policies = Policy.objects.filter(grade=emp.grade, department_id=emp.department_id)
+            today = date.today()
+
+            for policy in policies:
+                if policy.duration == 'Weekly':
+                    weekday = today.weekday()
+                    monday = today - timedelta(days=weekday)
+                    start_date = datetime.combine(monday, datetime.min.time())
+                    end_date = start_date + timedelta(days=6, hours=23, minutes=59, seconds=59)
+                else:
+                    first_day = today.replace(day=1)
+                    if today.month == 12:
+                        last_day = date(today.year + 1, 1, 1) - timedelta(days=1)
+                    else:
+                        last_day = date(today.year, today.month + 1, 1) - timedelta(days=1)
+                    start_date = datetime.combine(first_day, datetime.min.time())
+                    end_date = datetime.combine(last_day, datetime.max.time())
+
+                total_spent = Expense.objects.filter(
+                    emp=emp,
+                    date__range=(start_date, end_date),
+                    status__in=['Pending', 'Approved', 'Paid']
+                ).aggregate(total=Sum('amount'))['total'] or 0
+
+                new_total = total_spent
+                if exp.status != 'Approved':
+                    new_total += exp.amount
+
+                if new_total > policy.limit_amount and not force:
+                    return Response({
+                        "violation": True,
+                        "policy_name": policy.policy_name,
+                        "policy_type": policy.policy_type,
+                        "limit": policy.limit_amount,
+                        "spent": total_spent - exp.amount,
+                        "expense_amount": exp.amount
+                    }, status=200)
+
+            # Approve if no violation or if forced
             req.status = 'Approved'
             req.remarks = remarks
             req.save()
             exp.status = 'Approved'
             exp.save()
-
 
         elif action == 'reject':
             req.status = 'Rejected'
@@ -500,9 +541,9 @@ def check_policy(request):
             first_day = today.replace(day= 1)
 
             if today.month == 12:
-                last_day = date(today + 1, 1, 1) - timedelta(days=1)
+                last_day = date(today.year + 1, 1, 1) - timedelta(days=1)
             else:
-                last_day = date(today, today.month + 1 , 1) - timedelta(days=1)
+                last_day = date(today.year, today.month + 1 , 1) - timedelta(days=1)
 
             start_date = datetime.combine(first_day , datetime.min.time())
             end_date = datetime.combine(last_day, datetime.max.time())
