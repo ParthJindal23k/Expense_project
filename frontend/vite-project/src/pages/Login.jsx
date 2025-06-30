@@ -1,7 +1,8 @@
 import React , {useState} from 'react'
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"
 
 const Login = () => {
 
@@ -25,6 +26,7 @@ const Login = () => {
         const role = res.data.role
         localStorage.setItem('tempPhone', res.data.phone_number);
         localStorage.setItem('email', email)
+        localStorage.setItem('role', role)
 
         if(role == 'Hod'){
           navigate('/HoD-Dashboard')
@@ -43,7 +45,7 @@ const Login = () => {
 
     } catch (error) {
        console.error('Login error:', error);
-      alert(error.response?.data?.message || 'Login failed!');
+      toast.error(error.response?.data?.message || 'Login failed!');
     }
 
 

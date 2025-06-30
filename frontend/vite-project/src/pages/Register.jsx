@@ -1,6 +1,8 @@
 import axios from 'axios';
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +17,7 @@ const Register = () => {
 
     // Simple client-side validation
     if (!email || !username || !phone_number || !password) {
-      alert('Please fill in all fields');
+      toast.info('Please fill in all fields');
       return;
     }
 
@@ -32,18 +34,18 @@ const Register = () => {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/send-otp/`, data);
 
       if (response.status >= 200 && response.status < 300) {
-        alert('OTP sent successfully!');
+        toast.success('OTP sent successfully!');
         localStorage.setItem('email',email)
         
         navigate('/verify-otp');
       } else {
-        alert('Unexpected response status: ' + response.status);
+        toast.error('Unexpected response status: ' + response.status);
       }
 
     } catch (error) {
       // Show detailed backend error if available
       const backendError = error.response?.data || error.message;
-      alert('Something went wrong: ' + JSON.stringify(backendError));
+      toast.error('Something went wrong: ' + JSON.stringify(backendError));
       console.error('Error sending OTP:', backendError);
     }
   }

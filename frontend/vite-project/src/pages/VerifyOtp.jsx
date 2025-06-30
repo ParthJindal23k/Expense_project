@@ -1,6 +1,8 @@
 import axios from 'axios';
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"
 
 const VerifyOtp = () => {
 
@@ -27,18 +29,18 @@ const VerifyOtp = () => {
             })
 
              if (res.status === 200) {
-                alert('OTP Verified Successfully!');
+                toast.success('OTP Verified Successfully!');
                 navigate('/login')
                
              } else {
-                alert('Verification failed');
+                toast.error('Verification failed');
               }
 
               
 
         } catch (error) {
             console.error('Error verifying OTP:', error);
-            alert(error.response?.data?.message || 'Something went wrong!');
+            toast.error(error.response?.data?.message || 'Something went wrong!');
         }
 
     }
