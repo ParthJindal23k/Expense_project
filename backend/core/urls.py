@@ -21,6 +21,5 @@ urlpatterns = [
     path('request-hod-policy-approval/', hod_policy_approval),
     path('hod-soft-policy-requests/', hod_soft_policy_requests),
     path('exp_paid_history/',exp_paid_history ),
-    # path('exp_paid_history_week/' , exp_paid_history_week)
 
 ]

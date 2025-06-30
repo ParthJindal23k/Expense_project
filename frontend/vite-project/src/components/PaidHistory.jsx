@@ -25,12 +25,12 @@ const PaidHistory = () => {
   }, [startDate, endDate]);
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-md">
-      <h2 className="text-2xl font-semibold mb-6">Paid History</h2>
+    <div className="p-6 bg-white rounded-2xl shadow-lg max-w-5xl mx-auto">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800 flex items-center gap-2">Paid History</h2>
 
-      <div className="flex flex-wrap gap-4 mb-6">
-        <div>
-          <label className="mr-2">From:</label>
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className='flex flex-col'>
+          <label className="mb-1 text-sm text-gray-600">From:</label>
           <input
             type="date"
             value={startDate}
@@ -39,8 +39,8 @@ const PaidHistory = () => {
             max={new Date().toISOString().split("T")[0]}
           />
         </div>
-        <div>
-          <label className="mr-2">To:</label>
+        <div className='flex flex-col'>
+          <label className="mb-1 text-sm text-gray-600">To:</label>
           <input
             type="date"
             value={endDate}

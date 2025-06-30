@@ -9,7 +9,7 @@ from .models import Employee,Expense,ExpenseRequest,Policy
 from .serializers import RegisterSerializer,ExpenseSerializer
 import random
 from django.conf import settings
-
+from django.db.models import Q
 
 
 
@@ -533,10 +533,13 @@ def check_policy(request):
         return Response({"status": "error", "message": "Employee not found"}, status=404)
 
     
-    policies = Policy.objects.filter(grade = emp.grade ,department_id = emp.department_id  )
+    policies = Policy.objects.filter(grade = emp.grade, department_id = emp.department_id)
     today = date.today()
+    
+    hard_policies = policies.filter(policy_type = 'Hard').order_by('priority').first()
+    soft_policies = policies.filter(policy_type = 'Soft').order_by('priority').first()
 
-    for policy in policies:
+    def get_total_spent(policy):
         if policy.duration == 'Weekly':
             weekday = today.weekday()
             monday = today - timedelta(days=weekday)
@@ -556,32 +559,36 @@ def check_policy(request):
             start_date = datetime.combine(first_day , datetime.min.time())
             end_date = datetime.combine(last_day, datetime.max.time())
 
-        total_spent = Expense.objects.filter(
+        return Expense.objects.filter(
             emp = emp,
             date__range = (start_date, end_date),
              status__in=['Approved', 'Paid', 'Pending']
 
         ).aggregate(total = Sum('amount'))['total'] or 0
+
+
+
+
+    if hard_policies:
+        total_spent = get_total_spent(hard_policies)
+        if total_spent + amount > hard_policies.limit_amount:
+            return Response({
+                "status": "hard_violation",
+                "message": f"Hard policy violated: {hard_policies.policy_name}",
+                "limit": hard_policies.limit_amount,
+                "spent": total_spent,
+            })
         
-        print(total_spent)
-        print(amount)
-        print(policy.limit_amount)
-        if total_spent + amount > policy.limit_amount:
-            if policy.policy_type == "Hard":
-                return Response({
-                    "status" : "hard_violation",
-                    "message" :f"Hard policy violated: {policy.policy_name}",
-                    "limit": policy.limit_amount,
-                    "spent": total_spent,
-                })
-            
-            elif policy.policy_type == "Soft":
-                return Response({
-                    "status": "soft_violation",
-                    "message": f"Soft policy violated: {policy.policy_name}",
-                    "limit": policy.limit_amount,
-                    "spent": total_spent,
-                })
+    if soft_policies:
+        total_spent = get_total_spent(soft_policies)
+        if total_spent + amount > soft_policies.limit_amount:
+            return Response({
+                "status": "soft_violation",
+                "message": f"Soft policy violated: {soft_policies.policy_name}",
+                "limit": soft_policies.limit_amount,
+                "spent": total_spent,
+            })
+
     return Response({"status": "allowed"})
 
 
@@ -594,7 +601,6 @@ def hod_policy_approval(request):
     except:
         return Response({"status": "error", "message": "Employee not found"}, status=404)
 
-    # Remove email from data and pass the rest to serializer
     data = request.data.copy()
     data.pop('email', None)
 
@@ -684,3 +690,5 @@ def exp_paid_history(request):
 
     except Employee.DoesNotExist:
         return Response({'error': 'Employee not found'}, status=404)
+
+

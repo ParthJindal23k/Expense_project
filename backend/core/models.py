@@ -96,6 +96,7 @@ class Policy(models.Model):
     GRADE_CHOICES = [('A1','Grade A1'),('A2', 'Grade A2'), ('B1', 'Grade B1'), ('B2', 'Grade B2'), ('B3', 'Grade B3')]
     PRIORITY_CHOICES = [(1, 'Higher Priority') , (2, "Lower Priority")]
 
+
     policy_name = models.CharField(max_length= 100)
     grade = models.CharField(max_length=2,choices=GRADE_CHOICES, blank=True, null=True)
     department_id = models.IntegerField()
@@ -103,6 +104,13 @@ class Policy(models.Model):
     duration = models.CharField(max_length= 10 , choices=[('Weekly', 'Weekly'), ('Monthly','Monthly')])
     policy_type = models.CharField(max_length=10, choices=[('Hard', 'Hard'), ('Soft', 'Soft')])
     priority = models.IntegerField(default=1, choices= PRIORITY_CHOICES)
+
+    def save(self, *args, **kwargs):
+        if self.grade:
+            self.priority = 1 
+        else:
+            self.priority = 2  
+        super().save(*args, **kwargs)
 
 
     def __str__(self):
