@@ -18,7 +18,7 @@ const EmpDashboard = () => {
 
             case 'Create Request':
                 return(
-                    <CreateExpenseRequest/>
+                    <CreateExpenseRequest setsection = {setsection}/>
                 )
                 break;
 

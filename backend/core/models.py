@@ -99,7 +99,7 @@ class Policy(models.Model):
 
     policy_name = models.CharField(max_length= 100)
     grade = models.CharField(max_length=2,choices=GRADE_CHOICES, blank=True, null=True)
-    department_id = models.IntegerField()
+    department = models.ForeignKey('Department', on_delete=models.SET_NULL , null=True,related_name='policies')
     limit_amount = models.IntegerField()
     duration = models.CharField(max_length= 10 , choices=[('Weekly', 'Weekly'), ('Monthly','Monthly')])
     policy_type = models.CharField(max_length=10, choices=[('Hard', 'Hard'), ('Soft', 'Soft')])

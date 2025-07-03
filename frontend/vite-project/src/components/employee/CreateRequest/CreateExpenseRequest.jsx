@@ -1,17 +1,30 @@
 import axios from 'axios'
 import React, { useState } from 'react'
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
-const CreateExpenseRequest = () => {
+const CreateExpenseRequest = ({ setsection }) => {
   const email = localStorage.getItem('email')
   const [date, setDate] = useState('')
   const [note, setNote] = useState('')
   const [amount, setamount] = useState('')
   const [proof, setproof] = useState(null)
+  const [reason, setReason] = useState('')
+  const [showModal, setShowModal] = useState(false)
 
-  const notify = () =>{
-    toast.success('Expense submitted successfully!')
+  const notify = () => {
+    toast.success('Expense submitted successfully! Redirecting... ')
+    setTimeout(() => {
+      setsection("My Expenses")
+    }, 5000)
+  }
+
+  const resetForm = () => {
+    setDate('')
+    setNote('')
+    setamount('')
+    setproof(null)
+    setReason('')
   }
 
   const handleSubmit = async (e) => {
@@ -26,56 +39,9 @@ const CreateExpenseRequest = () => {
       const status = policyCheck.data.status
 
       if (status === 'allowed') {
-        const formData = new FormData()
-        formData.append('email', email)
-        formData.append('date', date)
-        formData.append('note', note)
-        formData.append('amount', amount)
-        formData.append('proof', proof)
-
-        const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
-
-        if (res.status === 201) {
-          notify()
-          setDate('')
-          setNote('')
-          setamount('')
-          setproof(null)
-        } else {
-          toast.error("Something went wrong")
-        }
-
+        await submitExpense()
       } else if (status === 'soft_violation') {
-        const reason = window.prompt("This exceeds soft policy limits. Please enter a reason for requesting HOD approvals:")
-        if (reason && reason.trim() !== "") {
-          const formData = new FormData()
-          formData.append('email', email)
-          formData.append('date', date)
-          formData.append('note', note)
-          formData.append('amount', amount)
-          formData.append('reason_for_hod', reason.trim())
-          formData.append('proof', proof);
-          const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/request-hod-policy-approval/`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          })
-
-          if (res.status === 200) {
-            toast.success("Request sent to HOD for approval.")
-            setDate('')
-            setNote('')
-            setamount('')
-            setproof(null)
-          } else {
-            toast.error("Failed to send request to HOD.")
-          }
-        }
-
+        setShowModal(true) // Show modal for HOD reason
       } else if (status === 'hard_violation') {
         toast.info("This expense violates a hard policy. You are not allowed to create this expense.")
       }
@@ -83,6 +49,63 @@ const CreateExpenseRequest = () => {
     } catch (error) {
       toast.error("Submission failed.")
       console.log(error)
+    }
+  }
+
+  const submitExpense = async () => {
+    const formData = new FormData()
+    formData.append('email', email)
+    formData.append('date', date)
+    formData.append('note', note)
+    formData.append('amount', amount)
+    formData.append('proof', proof)
+
+    const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    if (res.status === 201) {
+      notify()
+      resetForm()
+    } else {
+      toast.error("Something went wrong")
+    }
+  }
+
+  const submitHODApproval = async () => {
+    if (!reason.trim()) {
+      toast.error("Reason is required")
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('email', email)
+    formData.append('date', date)
+    formData.append('note', note)
+    formData.append('amount', amount)
+    formData.append('reason_for_hod', reason.trim())
+    formData.append('proof', proof)
+
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/request-hod-policy-approval/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+
+      if (res.status === 200) {
+        toast.success("Request sent to HOD for approval. Redirecting ...")
+        setTimeout(() => {
+          setsection("My Expenses")
+        }, 5000)
+
+        resetForm()
+        setShowModal(false)
+      } else {
+        toast.error("Failed to send request to HOD.")
+      }
+
+    } catch (err) {
+      console.log(err)
+      toast.error("Failed to send request.")
     }
   }
 
@@ -101,37 +124,35 @@ const CreateExpenseRequest = () => {
           encType="multipart/form-data"
         >
           <div>
-            <label htmlFor="a" className='block text-gray-700 font-semibold mb-2'>Your Email</label>
-            <p className='w-full px-4 py-3 bg-gray-300 rounded-lg' id="a">{email}</p>
+            <label className='block text-gray-700 font-semibold mb-2'>Your Email</label>
+            <p className='w-full px-4 py-3 bg-gray-300 rounded-lg'>{email}</p>
           </div>
 
           <div>
-            <label htmlFor="b" className='block text-gray-700 font-semibold mb-2'>Date of Expense</label>
+            <label className='block text-gray-700 font-semibold mb-2'>Date of Expense</label>
             <input
               value={date}
               onChange={(e) => setDate(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               type="date"
               required
-              id="b"
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
 
           <div>
-            <label htmlFor="c" className='block text-gray-700 font-semibold mb-2'>Note / Description</label>
+            <label className='block text-gray-700 font-semibold mb-2'>Note / Description</label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Describe what this expense was for..."
               className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
               required
-              id="c"
             />
           </div>
 
           <div>
-            <label htmlFor="d" className='block text-gray-700 font-semibold mb-2'>Amount (INR)</label>
+            <label className='block text-gray-700 font-semibold mb-2'>Amount (INR)</label>
             <input
               value={amount}
               onChange={(e) => setamount(e.target.value)}
@@ -139,19 +160,17 @@ const CreateExpenseRequest = () => {
               className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
               type="number"
               required
-              id="d"
             />
           </div>
 
           <div>
-            <label htmlFor="e" className='block text-gray-700 font-semibold mb-2'>Upload Expense Proof</label>
+            <label className='block text-gray-700 font-semibold mb-2'>Upload Expense Proof</label>
             <input
               onChange={(e) => setproof(e.target.files[0])}
               className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
               type="file"
               accept="application/pdf,image/png,image/jpeg"
               required
-              id="e"
             />
             <p className='text-sm text-gray-500 mt-1'>Acceptable formats: PDF, JPG, PNG</p>
           </div>
@@ -163,6 +182,47 @@ const CreateExpenseRequest = () => {
           </div>
         </form>
       </div>
+
+      <div className="relative z-0">
+        <div className="bg-white w-full max-w-5xl shadow-2xl rounded-xl mx-auto">
+        </div>
+
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300">
+          <div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg animate-fadeIn z-50">
+            <h2 className="text-2xl font-semibold text-blue-600 mb-4">Policy Violation</h2>
+            <p className="text-xl text-gray-700 mb-2">
+              This expense exceeds soft policy limits. Please enter a reason for HOD approval:
+            </p>
+
+            <textarea
+              className="textarea textarea-bordered w-full mb-4 bg-gray-100 rounded-xl focus:outline-none focus:border-transparent p-2"
+              rows={4}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Write your reason here..."
+            />
+
+
+            <div className="flex justify-end gap-3">
+              <button
+                className="btn btn-outline cursor-pointer"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary cursor-pointer"
+                onClick={submitHODApproval}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
