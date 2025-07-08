@@ -16,7 +16,7 @@ const CreateExpenseRequest = ({ setsection }) => {
     toast.success('Expense submitted successfully! Redirecting... ')
     setTimeout(() => {
       setsection("My Expenses")
-    }, 5000)
+    }, 2000)
   }
 
   const resetForm = () => {
@@ -208,13 +208,13 @@ const CreateExpenseRequest = ({ setsection }) => {
 
             <div className="flex justify-end gap-3">
               <button
-                className="btn btn-outline cursor-pointer"
+                className="px-6 py-2 rounded-xl bg-red-500 text-white font-semibold shadow-md transition-all duration-300 ease-in-out hover:bg-red-600 hover:scale-105 hover:shadow-lg "
                 onClick={() => setShowModal(false)}
               >
                 Cancel
               </button>
               <button
-                className="btn btn-primary cursor-pointer"
+                className="px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md transition-all duration-300 ease-in-out hover:bg-blue-700 hover:scale-105 hover:shadow-lg "
                 onClick={submitHODApproval}
               >
                 Submit

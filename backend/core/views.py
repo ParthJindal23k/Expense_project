@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from datetime import timedelta, date,datetime
 from django.db.models import Sum
 from .models import Employee,Expense,ExpenseRequest,Policy
-from .serializers import RegisterSerializer,ExpenseSerializer
+from .serializers import RegisterSerializer,ExpenseSerializer,EmployeeSerializer
 import random
 from django.conf import settings
 from django.db.models import Q
@@ -690,5 +690,15 @@ def exp_paid_history(request):
 
     except Employee.DoesNotExist:
         return Response({'error': 'Employee not found'}, status=404)
+    
+
+@api_view(['GET'])
+def get_all_employee(request):
+    emp = Employee.objects.all()
+    serializer = EmployeeSerializer(emp , many = True)
+    print(serializer.data)
+    return Response(serializer.data)
+
+    
 
 
