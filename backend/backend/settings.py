@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
+from datetime import timedelta
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +27,11 @@ SECRET_KEY = 'django-insecure-$^qxx&e$x!0xa!qm-_)vh@!y7d&-64wjn9wve+!$897qt86cg*
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1' , '172.31.99.234']
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 
 # Application definition
@@ -42,9 +48,11 @@ INSTALLED_APPS = [
     "corsheaders",
     'rest_framework_simplejwt',
     "anymail",
+    
 
 
 ]
+
 
 
 REST_FRAMEWORK = {
@@ -54,6 +62,11 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -152,7 +165,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    "http://172.31.99.234:8081",
 ]
 
 

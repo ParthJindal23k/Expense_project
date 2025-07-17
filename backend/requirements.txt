@@ -4,3 +4,4 @@ djangorestframework
 django-cors-headers
 djangorestframework-simplejwt
 django-anymail
+Pillow>=10.0

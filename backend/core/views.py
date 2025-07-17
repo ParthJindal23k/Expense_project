@@ -10,6 +10,8 @@ from .serializers import RegisterSerializer,ExpenseSerializer,EmployeeSerializer
 import random
 from django.conf import settings
 from django.db.models import Q
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 
 
@@ -71,21 +73,32 @@ def login_emp(request):
     password = request.data.get('password')
 
     try:
-        emp = Employee.objects.get(email = email)
-    except:
-        return Response({'error':"User not Found"}, status=404)
-    
+        emp = Employee.objects.get(email=email)
+    except Employee.DoesNotExist:
+        return Response({'error': "User not Found"}, status=404)
+
     if not emp.is_verified:
-        return Response({"error":"User not verified"}, status=403)
-    
-    if not check_password(password , emp.password):
-        return Response({"error":"Incorrect Password"}, status=401)
-    
+        return Response({"error": "User not verified"}, status=403)
+
+    if not check_password(password, emp.password):
+        return Response({"error": "Incorrect Password"}, status=401)
+
     if not emp.role:
         return Response({'message': 'Role not assigned. Contact admin.'}, status=400)
 
-    return Response({'message': 'Login successful', 'username': emp.username , 'email':emp.email , 'role':emp.role , 'phone_number':emp.phone_number}, status=200)
+    refresh = RefreshToken.for_user(emp)
+    access_token = str(refresh.access_token)
+    refresh_token = str(refresh)
 
+    return Response({
+        'message': 'Login successful',
+        'access': access_token,
+        'refresh': refresh_token,
+        'username': emp.username,
+        'email': emp.email,
+        'role': emp.role,
+        'phone_number': emp.phone_number
+    }, status=200)
         
 
 
@@ -126,6 +139,12 @@ def reset_password(request):
         return Response({'error': 'User not found'}, status=404)        
 
 
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from .models import Employee, Expense, ExpenseRequest
+from .serializers import ExpenseSerializer
+
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])  
 def expense_request(request):
@@ -133,39 +152,38 @@ def expense_request(request):
 
     try:
         employee = Employee.objects.get(email=email)
-    except :
+    except:
         return Response({'error': "Employee not found"}, status=404)
 
-    data = request.data.copy()
-    data.pop('email', None)
+    
+    input_data = request.data.dict()
+    input_data.pop('email', None)  
+    files = request.FILES
 
-    serializer = ExpenseSerializer(data=data)
+    serializer = ExpenseSerializer(data=request.data)
     if serializer.is_valid():
         expense = serializer.save(emp=employee)
 
         if employee.role == 'Employee':
-            required_by = Employee.objects.get(role = 'Manager', department = employee.department)
+            required_by = Employee.objects.get(role='Manager', department=employee.department)
             level = 'L1'
         else:
             required_by = employee.department.HOD
             level = 'HoD'
-        
 
         ExpenseRequest.objects.create(
-            expense = expense,
+            expense=expense,
             required_by=required_by,
             level=level,
-            status = "Pending",
-
+            status="Pending",
         )
 
         return Response({
             "message": "Expense and request created successfully"
         }, status=201)
     else:
-        print(serializer.errors)  
+        print(serializer.errors)
         return Response(serializer.errors, status=400)
-    
 
 
 @api_view(['POST'])
@@ -186,6 +204,7 @@ def expense_history(request):
         history_data.append({
             "expense_date" : exp.date,
             'request_date': exp.created_at,
+            "created_at": exp.created_at,
             'note': exp.note,
             'amount': exp.amount,
             'status': exp.status,
@@ -327,21 +346,28 @@ def hod_dashboard(request):
     email = request.data.get('email')
 
     try:
-        emp = Employee.objects.get(email = email)
-
+        emp = Employee.objects.get(email=email)
     except:
-        return Response({'error':"User not found"}, status=404)
-    
+        return Response({'error': "User not found"}, status=404)
+
     username = emp.username
     role = emp.role
     department = emp.department.name_department
     phone_number = emp.phone_number
     grade = emp.grade
     id = emp.id
-    
+    photo_url = emp.photo.url if emp.photo else None  
 
-    return Response({'username':username,'email':email,'role':role , 'department':department, 'phone_number':phone_number, 'grade':grade , 'id' : id})
-
+    return Response({
+        'username': username,
+        'email': email,
+        'role': role,
+        'department': department,
+        'phone_number': phone_number,
+        'grade': grade,
+        'id': id,
+        'photo': photo_url  
+    })
 
 @api_view(['POST'])
 def get_Hod_Other_request(request):
@@ -533,7 +559,7 @@ def check_policy(request):
         return Response({"status": "error", "message": "Employee not found"}, status=404)
 
     
-    policies = Policy.objects.filter(grade = emp.grade, department_id = emp.department_id)
+    policies = Policy.objects.filter( department_id = emp.department_id)
     today = date.today()
     
     hard_policies = policies.filter(policy_type = 'Hard').order_by('priority').first()
@@ -701,4 +727,24 @@ def get_all_employee(request):
 
     
 
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+def upload_profile_photo(request):
+    
+    print("------------------------")
 
+    email = request.data.get('email')
+    photo = request.FILES.get('photo')
+
+    if not email or not photo:
+        return Response({'error': 'Email and Photo are both required'}, status=400)
+
+    try:
+        emp = Employee.objects.get(email=email)
+    except Employee.DoesNotExist:
+        return Response({'error': 'Employee not found'}, status=404)
+
+    emp.photo = photo
+    emp.save()
+
+    return Response({'message': 'Profile photo uploaded successfully'}, status=200)

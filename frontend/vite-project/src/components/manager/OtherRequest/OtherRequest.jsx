@@ -8,24 +8,10 @@ const OtherRequest = () => {
   const [req, setreq] = useState([]);
   const [loading, setloading] = useState(true);
   const [remarks, setRemarks] = useState({});
-  const [allemployee,setAllemployee] = useState([])
-  const [selectedEmployee, setSelectedEmployee] = useState('');
 
   useEffect(() => {
     fetchRequests();
-    fetchAllEmployeeNames()
   }, []);
-
-
-  const fetchAllEmployeeNames = async () =>{
-    try {
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/all-employees/`)
-      setAllemployee(res.data)
-    } catch (error) {
-      console.error("Failed to fetch employee names", err);
-    }
-  } 
-
 
   const fetchRequests = async () => {
     setloading(true);
@@ -102,11 +88,7 @@ const OtherRequest = () => {
     }
   };
 
-  const status_req = req.filter((r) => {
-    const matchStatus = r.status === tab;
-    const matchEmployee = selectedEmployee === '' || r.raised_by_id === parseInt(selectedEmployee);
-    return matchStatus && matchEmployee;
-  });
+  const status_req = req.filter((r) => r.status === tab);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow w-full">
@@ -123,20 +105,6 @@ const OtherRequest = () => {
           </button>
         ))}
       </div>
-
-        <div className="mb-4">
-        <label className='block text-gray-700 font-medium mb-1'>Filter by Employee:</label>
-        <select value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}  className='border border-gray-300 px-4 py-2 rounded-lg w-full max-w-xs' >
-          <option value="">All Employees</option>
-          {allemployee.map((emp) =>{
-            return(
-              <option key = {emp.id} value = {emp.id}>{emp.username}</option>
-            )
-
-          })}
-        </select>
-      </div>
-
 
       {loading ? (
         <p>Loading...</p>
