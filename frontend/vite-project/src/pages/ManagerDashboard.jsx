@@ -19,11 +19,11 @@ const ManagerDashboard = () => {
 
             case 'Create Request':
                 return(
-                    <CreateExpenseRequest/>
+                    <CreateExpenseRequest setsection = {setsection}/>
                 )
                 break;
 
-            case 'Other Request':
+            case 'Approval Request':
                 return(
                     <OtherRequest/>
                 )

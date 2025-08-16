@@ -11,6 +11,9 @@ import random
 from django.conf import settings
 from django.db.models import Q
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Expense, ExpenseRequest, Employee
 
 
 
@@ -107,20 +110,20 @@ def manager_dashboard(request):
     email = request.data.get('email')
 
     try:
-        emp = Employee.objects.get(email = email)
+        emp = Employee.objects.get(email=email)
+    except Employee.DoesNotExist:
+        return Response({'error': "User not found"}, status=404)
 
-    except:
-        return Response({'error':"User not found"}, status=404)
-    
-    username = emp.username
-    role = emp.role
-    department = emp.department.name_department
-    phone_number = emp.phone_number
-    grade = emp.grade
-    id = emp.id
-    
-
-    return Response({'username':username,'email':email,'role':role , 'department':department, 'phone_number':phone_number, 'grade':grade , 'id' : id})
+    return Response({
+        'username': emp.username,
+        'email': emp.email,
+        'role': emp.role,
+        'department': emp.department.name_department if emp.department else None,
+        'phone_number': emp.phone_number,
+        'grade': emp.grade,
+        'id': emp.id,
+        'photo': emp.photo.url if emp.photo else None  
+    })
 
 
 @api_view(['POST'])
@@ -179,8 +182,10 @@ def expense_request(request):
         )
 
         return Response({
-            "message": "Expense and request created successfully"
+            "message": "Expense and request created successfully",
+            "expense_id": expense.expense_id
         }, status=201)
+
     else:
         print(serializer.errors)
         return Response(serializer.errors, status=400)
@@ -190,25 +195,66 @@ def expense_request(request):
 def expense_history(request):
     email = request.data.get('email')
     try:
-        emp = Employee.objects.get(email = email)
+        emp = Employee.objects.get(email=email)
+    except Employee.DoesNotExist:
+        return Response({'error': "User not found"}, status=404)
 
-    except:
-        return Response({'error':"User not found"}, status=404)
-    
-    expenses = Expense.objects.filter(emp = emp).order_by('-date')
-
+    expenses = Expense.objects.filter(emp=emp).exclude(status="Cancelled").order_by('-date')
     history_data = []
+
     for exp in expenses:
-        latest_req = ExpenseRequest.objects.filter(expense = exp).order_by('-time').first()
+        reqs = ExpenseRequest.objects.filter(expense=exp).order_by('time')
+
+        l1_status = None
+        hod_status = None
+        reason = ""
+
+        for r in reqs:
+            if r.level == "L1":
+                l1_status = r.status
+                if r.remarks:
+                    reason = r.remarks
+            elif r.level == "HoD":
+                hod_status = r.status
+                if r.remarks:
+                    reason = r.remarks
+
+        creator_role = exp.emp.role
+
+        if creator_role == "Manager":
+            if hod_status == "Pending":
+                combined_status = "Waiting for HoD"
+            elif hod_status == "Approved":
+                combined_status = "Approved by HoD, Waiting for Payment"
+            elif hod_status == "Paid":
+                combined_status = "Paid"
+            elif hod_status == "Rejected":
+                combined_status = "Rejected by HoD"
+            else:
+                combined_status = "Pending"
+
+        else:
+            if l1_status == "Pending":
+                combined_status = "Waiting for Manager (L1)"
+            elif l1_status == "Approved" and hod_status == "Pending":
+                combined_status = "Approved by Manager (L1), Waiting for HoD"
+            elif l1_status == "Approved" and hod_status == "Approved":
+                combined_status = "Approved by HoD, Waiting for Payment"
+            elif hod_status == "Paid":
+                combined_status = "Paid"
+            elif l1_status == "Rejected" or hod_status == "Rejected":
+                combined_status = "Rejected"
+            else:
+                combined_status = "Pending"
 
         history_data.append({
-            "expense_date" : exp.date,
-            'request_date': exp.created_at,
+            "expense_date": exp.date,
+            "request_date": exp.created_at,
             "created_at": exp.created_at,
-            'note': exp.note,
-            'amount': exp.amount,
-            'status': exp.status,
-            "reason": latest_req.remarks if latest_req and latest_req.remarks else ""
+            "note": exp.note,
+            "amount": exp.amount,
+            "status": combined_status,
+            "reason": reason
         })
 
     return Response(history_data)
@@ -265,7 +311,7 @@ def update_request(request):
         emp = exp.emp
 
         if action == 'approve':
-            from datetime import datetime, timedelta
+            from datetime import datetime, timedelta, date
             today = date.today()
             policies = Policy.objects.filter(grade=emp.grade, department_id=emp.department_id)
 
@@ -311,12 +357,28 @@ def update_request(request):
             req.remarks = remarks
             req.save()
 
+            try:
+                send_mail(
+                    'Hello from Clovia ReimburseX',
+                    f"""Hello,
+
+Expense request of {exp.amount}Rs created on {exp.date.strftime('%d-%m-%Y')} has been approved.
+
+Regards,
+Clovia ReimburseX Team
+""",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [req.required_by.email, emp.email],  
+                )
+            except Exception as e:
+                return Response({"error": f"Failed to send email: {str(e)}"}, status=500)
+
             if not ExpenseRequest.objects.filter(
                 expense=exp,
                 required_by=req.required_by.department.HOD,
                 level='HoD',
                 status='Pending'
-                ).exists():
+            ).exists():
                 ExpenseRequest.objects.create(
                     expense=exp,
                     required_by=req.required_by.department.HOD,
@@ -330,6 +392,22 @@ def update_request(request):
             req.save()
             exp.status = 'Rejected'
             exp.save()
+            try:
+                send_mail(
+                    'Hello from Clovia ReimburseX',
+                    f"""Hello,
+
+Expense request of {exp.amount}Rs created on {exp.date.strftime('%d-%m-%Y')} has been Rejected.
+
+Regards,
+Clovia ReimburseX Team
+""",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [req.required_by.email, emp.email],  
+                )
+            except Exception as e:
+                return Response({"error": f"Failed to send email: {str(e)}"}, status=500)
+
 
         else:
             return Response({'error': 'Invalid action'}, status=400)
@@ -377,7 +455,6 @@ def get_Hod_Other_request(request):
         emp = Employee.objects.get(email=email)
         department = emp.department
 
-        # Fetch all HoD-level requests in this department
         emp_req = ExpenseRequest.objects.filter(
             expense__emp__department=department,
             level='HoD'
@@ -466,12 +543,39 @@ def hod_update_request(request):
                         "expense_amount": exp.amount
                     }, status=200)
 
-            # Approve if no violation or if forced
             req.status = 'Approved'
             req.remarks = remarks
             req.save()
             exp.status = 'Approved'
             exp.save()
+
+            manager_request = ExpenseRequest.objects.filter(
+                expense=exp,
+                level='Manager',
+                status='Approved'
+            ).first()
+            manager_email = manager_request.required_by.email if manager_request else None
+
+            recipients = [req.required_by.email, emp.email]
+            if manager_email:
+                recipients.append(manager_email)
+
+            try:
+                send_mail(
+                    'Expense Request Approved - Clovia ReimburseX',
+                    f"""Hello,
+
+The expense request of {exp.amount}Rs created on {exp.date.strftime('%d-%m-%Y')} 
+has been approved by the HOD.
+
+Regards,
+Clovia ReimburseX Team
+""",
+                    settings.DEFAULT_FROM_EMAIL,
+                    recipients
+                )
+            except Exception as e:
+                return Response({"error": f"Failed to send email: {str(e)}"}, status=500)
 
         elif action == 'reject':
             req.status = 'Rejected'
@@ -536,6 +640,54 @@ def Comp_update_request(request):
             req.status = 'Paid'
             req.remarks = remarks
             req.save()
+
+            emp = exp.emp
+
+            manager_request = ExpenseRequest.objects.filter(
+                expense=exp,
+                level='L1',
+                status='Approved'
+            ).first()
+            manager_email = manager_request.required_by.email if manager_request else None
+
+            hod_request = ExpenseRequest.objects.filter(
+                expense=exp,
+                level='HOD',
+                status='Approved'
+            ).first()
+            hod_email = hod_request.required_by.email if hod_request else None
+
+            compensator_email = req.required_by.email
+
+            recipients = [emp.email]  
+            if manager_email:
+                recipients.append(manager_email)
+            if hod_email:
+                recipients.append(hod_email)
+            if compensator_email and compensator_email not in recipients:
+                recipients.append(compensator_email)
+
+            try:
+                send_mail(
+                    'Expense Request Paid - Clovia ReimburseX',
+                    f"""Hello,
+
+        The expense request of {exp.amount}Rs created on {exp.date.strftime('%d-%m-%Y')} 
+        has been marked as Paid.
+
+        Regards,
+        Clovia ReimburseX Team
+        """,
+                    settings.DEFAULT_FROM_EMAIL,
+                    recipients
+                )
+            except Exception as e:
+                return Response({"error": f"Failed to send email: {str(e)}"}, status=500)
+
+            exp.status = 'Paid'
+            exp.save()
+
+            
 
             exp.status = 'Paid'
             exp.save()
@@ -693,6 +845,7 @@ def exp_paid_history(request):
     start_date = request.data.get('start_date')
     end_date = request.data.get('end_date')
 
+
     try:
         emp = Employee.objects.get(email=email)
         expenses = Expense.objects.filter(emp=emp, status='Paid')
@@ -748,3 +901,26 @@ def upload_profile_photo(request):
     emp.save()
 
     return Response({'message': 'Profile photo uploaded successfully'}, status=200)
+
+
+
+@api_view(['POST'])
+def undo_expense_request(request):
+    print("Incoming request data:", request.data)
+    expense_id = request.data.get("expense_id")
+
+
+    try:
+        expense = Expense.objects.get(expense_id=expense_id)
+    except Expense.DoesNotExist:
+        return Response({"error": "Expense not found or already removed"}, status=status.HTTP_404_NOT_FOUND)
+
+    if expense.status != "Pending":
+        return Response({"error": "Cannot undo. Expense already processed."}, status=status.HTTP_400_BAD_REQUEST)
+
+    expense.status = "Cancelled"
+    expense.save()
+    ExpenseRequest.objects.filter(expense=expense).update(status="Cancelled")
+    
+
+    return Response({"message": "Expense request successfully cancelled"}, status=status.HTTP_200_OK)

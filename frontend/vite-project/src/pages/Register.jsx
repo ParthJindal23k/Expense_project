@@ -15,7 +15,6 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Simple client-side validation
     if (!email || !username || !phone_number || !password) {
       toast.info('Please fill in all fields');
       return;
@@ -43,7 +42,6 @@ const Register = () => {
       }
 
     } catch (error) {
-      // Show detailed backend error if available
       const backendError = error.response?.data || error.message;
       toast.error('Something went wrong: ' + JSON.stringify(backendError));
       console.error('Error sending OTP:', backendError);

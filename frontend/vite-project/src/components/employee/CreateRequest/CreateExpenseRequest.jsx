@@ -11,13 +11,7 @@ const CreateExpenseRequest = ({ setsection }) => {
   const [proof, setproof] = useState(null)
   const [reason, setReason] = useState('')
   const [showModal, setShowModal] = useState(false)
-
-  const notify = () => {
-    toast.success('Expense submitted successfully! Redirecting... ')
-    setTimeout(() => {
-      setsection("My Expenses")
-    }, 2000)
-  }
+  const [lastExpenseId, setLastExpenseId] = useState(null) 
 
   const resetForm = () => {
     setDate('')
@@ -29,7 +23,6 @@ const CreateExpenseRequest = ({ setsection }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     try {
       const policyCheck = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/check-policy/`, {
         email: email,
@@ -41,7 +34,7 @@ const CreateExpenseRequest = ({ setsection }) => {
       if (status === 'allowed') {
         await submitExpense()
       } else if (status === 'soft_violation') {
-        setShowModal(true) // Show modal for HOD reason
+        setShowModal(true)
       } else if (status === 'hard_violation') {
         toast.info("This expense violates a hard policy. You are not allowed to create this expense.")
       }
@@ -60,17 +53,58 @@ const CreateExpenseRequest = ({ setsection }) => {
     formData.append('amount', amount)
     formData.append('proof', proof)
 
-    const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/expenses/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
 
-    if (res.status === 201) {
-      notify()
-      resetForm()
-    } else {
-      toast.error("Something went wrong")
+      if (res.status === 201) {
+        const expenseId = res.data.expense_id
+        setLastExpenseId(expenseId)
+
+        toast.success(
+          <div>
+            Expense submitted successfully!  
+            <button 
+              onClick={() => undoLastRequest(expenseId)} 
+              className="ml-3 underline text-blue-300"
+            >
+              Undo
+            </button>
+          </div>, 
+          { autoClose: 5000 }
+        )
+
+        setTimeout(() => {
+          setsection("My Expenses")
+        }, 2000)
+
+        resetForm()
+      } else {
+        toast.error("Something went wrong")
+      }
+    } catch (err) {
+      toast.error("Failed to submit expense")
+      console.log(err)
     }
   }
+
+  const undoLastRequest = async (expenseId) => {
+  try {
+    console.log("Sending undo request with expense_id:", expenseId);
+    await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/api/undo-expense/`,
+      { expense_id: expenseId },
+      { headers: { "Content-Type": "application/json" } } 
+    );
+    toast.info("Expense request undone");
+    setLastExpenseId(null);
+  } catch (err) {
+    toast.error("Failed to undo request");
+    console.log(err);
+  }
+};
+
 
   const submitHODApproval = async () => {
     if (!reason.trim()) {
@@ -112,7 +146,6 @@ const CreateExpenseRequest = ({ setsection }) => {
   return (
     <div className='min-h-screen items-center justify-center pl-50 pt-20'>
       <div className="bg-white w-full max-w-5xl shadow-2xl rounded-xl ">
-
         <div className="bg-blue-600 text-white text-center py-6 px-10">
           <h1 className='text-4xl font-bold'>Create New Expense</h1>
           <p className='text-md mt-2'>Please fill in details below to submit your expense claim</p>
@@ -183,12 +216,6 @@ const CreateExpenseRequest = ({ setsection }) => {
         </form>
       </div>
 
-      <div className="relative z-0">
-        <div className="bg-white w-full max-w-5xl shadow-2xl rounded-xl mx-auto">
-        </div>
-
-      </div>
-
       {showModal && (
         <div className="fixed inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300">
           <div className="bg-white w-full max-w-md p-6 rounded-lg shadow-lg animate-fadeIn z-50">
@@ -205,16 +232,15 @@ const CreateExpenseRequest = ({ setsection }) => {
               placeholder="Write your reason here..."
             />
 
-
             <div className="flex justify-end gap-3">
               <button
-                className="px-6 py-2 rounded-xl bg-red-500 text-white font-semibold shadow-md transition-all duration-300 ease-in-out hover:bg-red-600 hover:scale-105 hover:shadow-lg "
+                className="px-6 py-2 rounded-xl bg-red-500 text-white font-semibold shadow-md transition-all duration-300 ease-in-out hover:bg-red-600 hover:scale-105 hover:shadow-lg"
                 onClick={() => setShowModal(false)}
               >
                 Cancel
               </button>
               <button
-                className="px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md transition-all duration-300 ease-in-out hover:bg-blue-700 hover:scale-105 hover:shadow-lg "
+                className="px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow-md transition-all duration-300 ease-in-out hover:bg-blue-700 hover:scale-105 hover:shadow-lg"
                 onClick={submitHODApproval}
               >
                 Submit

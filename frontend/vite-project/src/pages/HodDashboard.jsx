@@ -10,7 +10,7 @@ const HodDashboard = () => {
     const renderSection = () =>{
         switch (section) {
 
-            case 'Other Request':
+            case 'Approval Request':
                 return (
                     <OtherRequest/>
                 )

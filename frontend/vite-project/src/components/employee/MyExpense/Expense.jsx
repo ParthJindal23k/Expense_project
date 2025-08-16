@@ -35,13 +35,19 @@ const Expense = () => {
                 let rejected = 0;
 
                 histres.data.forEach(exp => {
-                    if (exp.status === "Pending") {
-                        pending += exp.amount
+                    if (
+                        exp.status === "Pending" ||
+                        exp.status === "Waiting for HoD" ||
+                        exp.status === "Waiting for Manager (L1)" ||
+                        exp.status === "Approved by Manager (L1), Waiting for HoD" ||
+                        exp.status === "Approved by HoD, Waiting for Payment"
+                    ) {
+                        pending += exp.amount;
                     }
                     else if (exp.status === "Rejected") {
-                        rejected += exp.amount
+                        rejected += exp.amount;
                     }
-                })
+                });
 
                 setpending(pending)
                 setrejected(rejected)
@@ -57,6 +63,13 @@ const Expense = () => {
 
     }, [])
 
+    const statusSoftPolicy = (status) => {
+    if (status === "Pending") {
+        return "Waiting for HoD";
+    }
+    return status;
+};
+
 
     const getPrettyTime = (dateString) => {
         const inputDate = dayjs(dateString);
@@ -70,7 +83,9 @@ const Expense = () => {
     };
 
 
-    const filterHistory = statusFilter ? history.filter(item => item.status === statusFilter) : history
+    const filterHistory = statusFilter 
+    ? history.filter(item => item.status === statusFilter && item.status !== "Cancelled")
+    : history.filter(item => item.status !== "Cancelled");
 
 
 
@@ -79,7 +94,7 @@ const Expense = () => {
             <h1 className='text-2xl font-bold mb-6'>Welcome, {data ? data.username : "user"}!</h1>
 
             <div className="grid grid-cols-2 gap-4 mb-8 ">
-                
+
 
                 <div className="bg-white p-4 rounded shadow">
                     <h3 className='font-semibold'>Paid History</h3>
@@ -92,9 +107,9 @@ const Expense = () => {
                 </div>
 
                 <div className="bg-white p-4 rounded shadow">
-                    <h3 className='font-semibold text-yellow-600 text-2xl'>Pending</h3>
+                    <h3 className='font-semibold text-yellow-600 text-2xl'>Waiting</h3>
                     <p className=' font-semibold text-yellow-600'>{pending}</p>
-                    
+
                 </div>
 
                 <div className="bg-white p-4 rounded shadow">
@@ -113,7 +128,8 @@ const Expense = () => {
                         className="border px-3 py-1 rounded"
                     >
                         <option value="">All Statuses</option>
-                        <option value="Approved">Approved</option>
+                        <option value="Approved by HoD, Waiting for Payment">Approved by HoD</option>
+                        <option value="Approved by Manager (L1), Waiting for HoD">Approved by Manager</option>
                         <option value="Pending">Pending</option>
                         <option value="Rejected">Rejected</option>
                         <option value="Paid">Paid</option>
@@ -152,16 +168,20 @@ const Expense = () => {
                                     <td className="py-2 pl-6 font-medium">{data.amount}</td>
 
 
-                                    <td className={`font-semibold px-2 py-1 rounded 
-        ${data.status === 'Approved' ? 'text-green-600 bg-green-100' :
-                                            data.status === 'Pending' ? 'text-yellow-600 bg-yellow-100' :
+                                    <td className={`font-semibold px-3 py-2 rounded text-sm leading-snug break-words whitespace-normal max-w-[200px]
+    ${data.status === 'Approved by HoD, Waiting for Payment' || data.status === 'Approved by Manager (L1), Waiting for HoD' ? 'text-green-600 bg-green-100' :
+                                            data.status === 'Waiting for Manager (L1)' ? 'text-yellow-600 bg-yellow-100' :
                                                 data.status === 'Paid' ? 'text-blue-600 bg-blue-100' :
+                                             statusSoftPolicy(data.status) === 'Waiting for HoD' ? 'text-yellow-600 bg-yellow-100' :   
                                                     'text-red-600 bg-red-100'}`}>
-                                        {data.status}
+
+                                        {statusSoftPolicy(data.status)}
+
                                         {data.status === 'Rejected' && data.reason && (
-                                            <div className="text-xs mt-1 text-gray-700 font-normal italic">
+                                            <div className="text-xs mt-1 text-gray-700 font-normal italic break-words whitespace-normal">
                                                 Reason: {data.reason}
                                             </div>
+
                                         )}
                                     </td>
                                 </tr>

@@ -6,11 +6,11 @@ import Sidebar from '../components/compensator/Sidebar';
 
 const CompensatorDashboard = () => {
 
-    const [section , setsection] = useState('Other Request')
+    const [section , setsection] = useState('Approval Request')
 
     const renderSection = () =>{
         switch (section) {
-            case 'Other Request':
+            case 'Approval Request':
                 return(
                     <OtherRequest/>
                 )

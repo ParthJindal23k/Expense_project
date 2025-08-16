@@ -2,7 +2,7 @@ import React from 'react'
 
 const Sidebar = ({currentSection , onChangeSection}) => {
 
-  const sections = ['My Expenses', 'Create Request' , 'Other Request','Profile']
+  const sections = ['My Expenses', 'Create Request' , 'Approval Request','Profile']
 
 
   return (

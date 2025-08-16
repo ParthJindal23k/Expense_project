@@ -2,7 +2,7 @@ import React from 'react'
 
 const Sidebar = ({currentSection , onChangeSection}) => {
 
-  const sections = [ 'Other Request','Profile']
+  const sections = [ 'Approval Request','Profile']
 
 
   return (

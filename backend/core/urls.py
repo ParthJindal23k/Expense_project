@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_user,verify_otp,login_emp,manager_dashboard,reset_password,expense_request, expense_history,get_other_request, hod_dashboard, update_request, get_Hod_Other_request,hod_update_request, comp_other_request, Comp_update_request, check_policy, hod_policy_approval,hod_soft_policy_requests, exp_paid_history,get_all_employee,upload_profile_photo
+from .views import register_user,verify_otp,login_emp,manager_dashboard,reset_password,expense_request, expense_history,get_other_request, hod_dashboard, update_request, get_Hod_Other_request,hod_update_request, comp_other_request, Comp_update_request, check_policy, hod_policy_approval,hod_soft_policy_requests, exp_paid_history,get_all_employee,upload_profile_photo,undo_expense_request
 
 urlpatterns = [
     
@@ -22,6 +22,7 @@ urlpatterns = [
     path('hod-soft-policy-requests/', hod_soft_policy_requests),
     path('exp_paid_history/',exp_paid_history ),
     path('all-employees/', get_all_employee),
-    path('upload-profile-photo/',upload_profile_photo )
+    path('upload-profile-photo/',upload_profile_photo ),
+    path('undo-expense/',undo_expense_request ,name='undo_expense')
 
 ]

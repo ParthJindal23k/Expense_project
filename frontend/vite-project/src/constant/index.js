@@ -9,7 +9,7 @@ import { GlobeLock } from "lucide-react";
 
 export const navItems = [
   { label: "Home", href: "" },
-  { label: "About", href: "" },
+  
 ];
 
 
@@ -27,7 +27,7 @@ export const features = [
     text: "Approval Workflow",
   },
   {
-    text: "Collaboration Tools",
+    text: "Policy Approval",
   },
   {
     text: "Analytics Dashboard",

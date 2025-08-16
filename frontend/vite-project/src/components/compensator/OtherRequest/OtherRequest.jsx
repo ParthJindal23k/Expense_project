@@ -55,7 +55,7 @@ const OtherRequest = () => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow w-full">
-      <h2 className="text-2xl font-semibold mb-6">Other Requests</h2>
+      <h2 className="text-2xl font-semibold mb-6">Approval Requests</h2>
       <div className="space-x-3 mb-6">
         {['Approved', 'Paid'].map((val) => (
           <button key={val} onClick={() => settab(val)} className={`px-4 py-2 rounded-full ${tab === val ? 'bg-purple-600 text-white ' : 'bg-gray-200 text-gray-700'} `} >{val}</button>
