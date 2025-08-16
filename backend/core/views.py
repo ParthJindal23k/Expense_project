@@ -14,6 +14,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Expense, ExpenseRequest, Employee
+from rest_framework import status
+
+
 
 
 
@@ -142,11 +145,6 @@ def reset_password(request):
         return Response({'error': 'User not found'}, status=404)        
 
 
-from rest_framework.decorators import api_view, parser_classes
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
-from .models import Employee, Expense, ExpenseRequest
-from .serializers import ExpenseSerializer
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])  
